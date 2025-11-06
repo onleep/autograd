@@ -1,6 +1,6 @@
 import re
 
-from .types import ListInfo, TechInfo
+from .types import ListInfo, PageInfo, TechInfo
 
 
 def list_info(data: dict) -> ListInfo | None:
@@ -32,10 +32,12 @@ def list_info(data: dict) -> ListInfo | None:
     return result
 
 
-def descript_info(data: str) -> str | None:
+def page_info(data: str) -> PageInfo:
     match = re.search(r'platform.*?},"description":"(.*?)"', data, re.DOTALL)
-    if not match or not match.lastindex: return
-    return match.group(1).replace('\\n', ' ')
+    descript = match.group(1).replace('\\n', ' ') if match and match.lastindex else None
+    match = re.search(r'Цвет.*?<a[^>]*>(.*?)</a>', data, re.DOTALL)
+    color = match.group(1).capitalize() if match and match.lastindex else None
+    return {'description': descript, 'color': color}
 
 
 def tech_info(data: dict) -> TechInfo | None:

@@ -42,6 +42,11 @@ class ExtListInfo(ListInfo):
     description: str | None
 
 
+class PageInfo(TypedDict):
+    description: str | None
+    color: str | None
+
+
 class TechInfo(TypedDict):
     performance_indicators: dict[str, dict[str, str]] | None
     transmission: dict[str, dict[str, str]] | None

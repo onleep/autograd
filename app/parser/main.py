@@ -6,7 +6,7 @@ from time import time
 from database.mysql import Attributes, Offers, Photos, Specifications
 from s3.main import s3_upload
 
-from .extractor import descript_info, list_info, tech_info
+from .extractor import list_info, page_info, tech_info
 from .types import ExtListInfo, TechInfo
 from .utils import request
 
@@ -44,28 +44,14 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     techInfo = await request(url, toJson=True, retry=5, **kwargs)
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
-    # vinReport
-    jsonData = {
-        'offerID': f'{id}-{hash}',
-        'category': 'cars',
-        'isCardPage': True,
-        'geo_id': [],
-    }
-    url = f'{INFO_URL}/getRichVinReport/'
-    kwargs = {'headers': headers, 'json': jsonData}
-    vinReport = await request(url, toJson=True, retry=5, **kwargs)
-    vinReport = i if vinReport and (i := vinReport['json']) else {}
-    pts_info = vinReport.get('report', {}).get('pts_info', {})
-    color = pts_info.get('color', {}).get('value')
-    # description
+    # description & color
     url = f'{URL}/cars/used/sale/{id}-{hash}/'
-    page = await request(url, headers=headers, retry=5, allow_redirects=True)
-    descript = page['text'] or '' if page else ''
+    pageInfo = await request(url, headers=headers, retry=5, allow_redirects=True)
+    pageInfo = pageInfo['text'] or '' if pageInfo else ''
     listInfo: ExtListInfo = {
         **rawlistInfo,
-        'color': color,
+        **page_info(pageInfo),
         'autoru_hash': hash,
-        'description': descript_info(descript),
     }
     await insert(listInfo, techInfo, id)
     logging.info(f'Parsing car {id}-{hash} completed')
