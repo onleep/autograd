@@ -1,0 +1,23 @@
+[project]
+name = "autograd"
+version = "0.1.0"
+description = "Detect everyone, everywhere"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "aioboto3>=15.4.0",
+    "aiocron>=2.1",
+    "aiohttp[speedups]>=3.13.1",
+    "browserforge>=1.2.3",
+    "cryptography>=46.0.3",
+    "python-dotenv>=1.1.1",
+    "tortoise-orm[asyncmy]>=0.25.1",
+]
+
+[tool.yapf]
+column_limit = 88
+based_on_style = "PEP8"
+INDENT_DICTIONARY_VALUE = true
+
+[tool.ruff.lint]
+ignore = ["E701", "E731"]
