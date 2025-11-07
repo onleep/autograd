@@ -19,7 +19,7 @@ async def process(session: ClientSession) -> ClientSession:
     session.cookie_jar.update_cookies({'autoru_gdpr': '1'})
     headers = {'Host': 'auto.ru', 'referer': f'{URL}/', 'priority': 'u=0, i'}
     session.headers.update(**fingerprint['headers'], **headers)
-    first = await request(f'{URL}/', session) or {}
+    first = await request(f'{URL}/', session, status=302) or {}
     X_Request_Id = first['data'].headers['X-Request-Id']
     uuid = yURL(first['data'].headers['Location']).query['uuid']
     # get container

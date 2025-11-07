@@ -45,8 +45,9 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
     # description & color
-    url = f'{URL}/cars/used/sale/{id}-{hash}/'
-    pageInfo = await request(url, headers=headers, retry=5, allow_redirects=True)
+    mark, model = rawlistInfo['mark'].lower(), rawlistInfo['model'].lower()
+    url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
+    pageInfo = await request(url, headers=headers, retry=5)
     pageInfo = pageInfo['text'] or '' if pageInfo else ''
     listInfo: ExtListInfo = {
         **rawlistInfo,

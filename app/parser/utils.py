@@ -20,6 +20,7 @@ async def request(
     data: dict | None = None,
     json: dict | None = None,
     toJson: bool = False,
+    status: int = 200,
     retry: int = 1,
     **kwargs,
 ) -> Response | None:
@@ -33,12 +34,13 @@ async def request(
             kwargs = {'json': json, 'allow_redirects': False, **kwargs}
             method = session.post if data or json else session.get
             async with method(url, params=params, data=data, **kwargs) as response:
-                if response.status not in (200, 302): raise ClientError('http_code')
+                if response.status != status: raise ClientError('http_code')
                 isImage = response.headers['Content-Type'] == 'image/jpeg'
                 if toJson: jsond = await response.json(content_type=None)
                 elif isImage: raw = await response.read()
                 else: text = await response.text()
-                if jsond and jsond.get('status') == 'ERROR': raise ClientError('status')
+                error = jsond and (jsond.get('status') == 'ERROR' or jsond.get('error'))
+                if error: raise ClientError('status')
                 if proxy: proxy['errors'] = 0
                 return {'data': response, 'json': jsond, 'text': text, 'raw': raw}
         except Exception as e:
