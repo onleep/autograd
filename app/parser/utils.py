@@ -76,7 +76,8 @@ def gen_fp() -> Fingerpring:
 async def get_proxy() -> str | None:
     async with lock:
         key_fn = lambda k: (proxies[k]['cooldown'])
-        filtered = (i for i in proxies if not proxies[i]['lock'])
+        filtered = (i for i in proxies
+                    if not proxies[i]['lock'] and proxies[i]['cooldown'] <= time() + 10)
         proxy = min(filtered, key=key_fn, default=None)
         if proxy: proxies[proxy]['lock'] = True
     return proxy
