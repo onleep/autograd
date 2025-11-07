@@ -44,8 +44,8 @@ async def request(
                 if proxy: proxy['errors'] = 0
                 return {'data': response, 'json': jsond, 'text': text, 'raw': raw}
         except Exception as e:
-            reqproxy = session._default_proxy
-            logging.error(f'{reqproxy, url, type(e).__name__, str(e)}')
+            reqProxy = session._default_proxy
+            logging.error(f'{reqProxy, url, type(e).__name__, str(e)}')
             if not proxy: continue
             session = None
             proxy['errors'] += 1
@@ -81,3 +81,18 @@ async def get_proxy() -> str | None:
         proxy = min(filtered, key=key_fn, default=None)
         if proxy: proxies[proxy]['lock'] = True
     return proxy
+
+
+def lock_func():
+    lock = asyncio.Lock()
+
+    def decorator(func):
+
+        async def wrapper(*args, **kwargs):
+            if lock.locked(): return
+            async with lock:
+                return await func(*args, **kwargs)
+
+        return wrapper
+
+    return decorator

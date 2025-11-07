@@ -8,7 +8,7 @@ from s3.main import s3_upload
 
 from .extractor import list_info, page_info, tech_info
 from .types import ExtListInfo, TechInfo
-from .utils import request
+from .utils import lock_func, request
 
 URL = 'https://auto.ru'
 INFO_URL = f'{URL}/-/ajax/desktop-search'
@@ -96,6 +96,7 @@ async def car_list(mark: str, sort: str):
     logging.info(f'Parcing {mark} sort {sort} completed')
 
 
+@lock_func()
 async def parse_cars():
     marks = [
         'KIA',
@@ -119,6 +120,7 @@ async def parse_cars():
     [await car_list(mark, sort) for mark in marks for sort in sorts]
 
 
+@lock_func()
 async def parse_photos():
     threeDays = datetime.now() - timedelta(days=3)
     photos = await Photos.filter(status=0, created_at__gte=threeDays)
