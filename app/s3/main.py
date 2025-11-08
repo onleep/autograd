@@ -4,13 +4,17 @@ from aioboto3 import Session
 from config import S3_ID, S3_KEY
 
 
+async def s3_upload(data: bytes, folder: str, key: str):
+    await s3.upload_fileobj(BytesIO(data), 'main', f'{folder}/{key}')
+
+
 async def s3_download(folder: str, key: str) -> bytes:
     data = await s3.get_object(Bucket='main', Key=f'{folder}/{key}')
     return await data['Body'].read()
 
 
-async def s3_upload(data: bytes, folder: str, key: str):
-    await s3.upload_fileobj(BytesIO(data), 'main', f'{folder}/{key}')
+async def s3_delete(folder: str, key: str):
+    await s3.delete_object(Bucket='main', Key=f'{folder}/{key}')
 
 
 async def s3init():

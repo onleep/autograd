@@ -128,7 +128,7 @@ async def process_photo(photo: Photos, headers: dict):
     if imageType != 'jpeg': image = await asyncio.to_thread(to_jpeg, image)
     await s3_upload(image, str(photo.autoru_id), f'{photo.name}.jpg')
     await Photos.filter(id=photo.id).update(status=1)
-    logging.info(f'Processed photo {photo.name} [{photo.id}] completed')
+    logging.info(f'Processing photo {photo.name} [{photo.id}] completed')
 
 
 @lock_func()
