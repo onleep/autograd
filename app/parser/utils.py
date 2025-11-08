@@ -1,10 +1,12 @@
 import asyncio
 import logging
+from io import BytesIO
 from time import time
 
 from aiohttp import ClientError, ClientSession
 from browserforge.fingerprints import FingerprintGenerator
 from config import PROXIES
+from PIL import Image
 
 from .types import Fingerpring, ProxyData, Response
 
@@ -35,7 +37,7 @@ async def request(
             method = session.post if data or json else session.get
             async with method(url, params=params, data=data, **kwargs) as response:
                 if response.status != status: raise ClientError('http_code')
-                isImage = response.headers['Content-Type'] == 'image/jpeg'
+                isImage = 'image' in response.headers['Content-Type']
                 if toJson: jsond = await response.json(content_type=None)
                 elif isImage: raw = await response.read()
                 else: text = await response.text()
@@ -81,6 +83,13 @@ async def get_proxy() -> str | None:
         proxy = min(filtered, key=key_fn, default=None)
         if proxy: proxies[proxy]['lock'] = True
     return proxy
+
+
+def to_jpeg(image: bytes):
+    buffer = BytesIO()
+    jpeg = Image.open(BytesIO(image))
+    jpeg.convert('RGB').save(buffer, 'JPEG')
+    return buffer.getvalue()
 
 
 def lock_func():

@@ -1,7 +1,7 @@
 services:
   app:
     build: .
-    restart: unless-stopped
+    restart: on-failure:0
     depends_on:
       minio:
         condition: service_healthy
