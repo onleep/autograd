@@ -1,14 +1,12 @@
 import asyncio
 import logging
-from datetime import datetime, timedelta
 from time import time
 
 from database.mysql import Attributes, Offers, Photos, Specifications
-from s3.main import s3_upload
 
 from .extractor import list_info, page_info, tech_info
 from .types import ExtListInfo, TechInfo
-from .utils import lock_func, request, to_jpeg
+from .utils import lock_func, request
 
 URL = 'https://auto.ru'
 INFO_URL = f'{URL}/-/ajax/desktop-search'
@@ -71,7 +69,7 @@ async def car_list(mark: str, sort: str):
         'page': 1,
         'geo_id': [],
     }
-    for pageNum in range(1, 99):
+    for pageNum in range(1, 100):
         logging.info(f'Parcing {mark} sort {sort} page {pageNum}')
         jsonData['page'] = pageNum
         url = f'{INFO_URL}/listing/'
@@ -118,25 +116,3 @@ async def parse_cars():
         'year-asc',
     ]
     [await car_list(mark, sort) for mark in marks for sort in sorts]
-
-
-async def process_photo(photo: Photos, headers: dict):
-    logging.info(f'Processing photo {photo.name} [{photo.id}]')
-    resp = await request(photo.url, headers=headers, retry=5)
-    if not resp or not (image := resp['raw']): return
-    imageType = resp['data'].headers['Content-Type'].split('/')[-1]
-    if imageType != 'jpeg': image = await asyncio.to_thread(to_jpeg, image)
-    await s3_upload(image, str(photo.autoru_id), f'{photo.name}.jpg')
-    await Photos.filter(id=photo.id).update(status=1)
-    logging.info(f'Processing photo {photo.name} [{photo.id}] completed')
-
-
-@lock_func()
-async def parse_photos():
-    headers = {'Host': 'photo.auto.ru'}
-    threeDays = datetime.now() - timedelta(days=3)
-    photos = await Photos.filter(status=0, created_at__gte=threeDays)
-    for i in range(0, len(photos), 100):
-        batch = photos[i:i + 100]
-        await asyncio.gather(*(process_photo(p, headers) for p in batch))
-        logging.info(f'Processed {i+len(batch)} / {len(photos)} photos')

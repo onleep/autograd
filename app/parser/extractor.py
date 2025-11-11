@@ -25,18 +25,12 @@ def list_info(data: dict) -> ListInfo | None:
         if not i.get('sizes', {}).get('584x438'): continue
         if pclass in ('BACK_LEFT', 'BACK_RIGHT'): pclass = 'BACK'
         elif pclass in ('FRONT_LEFT', 'FRONT_RIGHT'): pclass = 'FRONT'
+        pclass = pclass.replace('3_4_', '')
         whitelist = [
-            'BACK',
-            'FRONT',
-            'SIDE_LEFT',
-            'SIDE_RIGHT',
-            '3_4_BACK_LEFT',
-            '3_4_BACK_RIGHT',
-            '3_4_FRONT_LEFT',
-            '3_4_FRONT_RIGHT',
+            'BACK', 'FRONT', 'SIDE_LEFT', 'SIDE_RIGHT', 'BACK_LEFT', 'BACK_RIGHT',
+            'FRONT_LEFT', 'FRONT_RIGHT'
         ]
         if pclass not in whitelist: continue
-        pclass = pclass.replace('3_4_', '')
         result['photos'][pclass] = 'https:' + i['sizes']['584x438']
     strict = ['year', 'owners', 'mileage', 'price', 'custom_cleared', 'mark', 'model']
     if not all(result[k] for k in strict + ['photos']): return

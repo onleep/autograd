@@ -16,16 +16,22 @@ class Offers(Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 
+    class Meta:  # type: ignore
+        indexes = (('mark', 'model', 'year'), )
+
 
 class Photos(Model):
     id = fields.IntField(primary_key=True)
     autoru = fields.ForeignKeyField('models.Offers', to_field='autoru_id')
     autoru_id: int  # created by autoru key
     name = fields.CharField(max_length=100)
-    url = fields.CharField(unique=True, max_length=255)
+    url = fields.CharField(max_length=255, unique=True)
     status = fields.IntField(default=0, index=True)
-    created_at = fields.DatetimeField(auto_now_add=True, index=True)
+    created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
+
+    class Meta:  # type: ignore
+        indexes = (('name', 'autoru_id'), )
 
 
 class Attributes(Model):

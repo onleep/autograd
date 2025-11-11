@@ -1,7 +1,8 @@
 import asyncio
 
 from aiocron import crontab
-from parser.main import parse_cars, parse_photos
+from parser.main import parse_cars
+from parser.photo import parse_photos
 
 
 async def cron() -> None:

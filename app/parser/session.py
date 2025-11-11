@@ -81,7 +81,7 @@ async def process(session: ClientSession) -> ClientSession:
         'autoru-visits-session-unexpired': '1',
         'layout-config': fingerprint['layout'],
         'count-visits': '1',
-        '_ym_d': cookies['from_lifetime'].value[:10]
+        '_ym_d': cookies['from_lifetime'].value[:10],
     }
     session.headers.update(headers)
     session.cookie_jar.update_cookies(cookies)
