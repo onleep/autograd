@@ -24,11 +24,11 @@ async def process_photo(photo: Photos, headers: dict):
 
 def get_photos(target: dict) -> QuerySet[Photos]:
     return Photos.filter(
-        name=target['name'],
         status__range=(-2, 0),
         autoru__mark=target['autoru__mark'],
         autoru__model=target['autoru__model'],
         autoru__year=target['autoru__year'],
+        name=target['name'],
     ).limit(50)
 
 

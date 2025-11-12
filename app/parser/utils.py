@@ -41,8 +41,8 @@ async def request(
                 if toJson: jsond = await response.json(content_type=None)
                 elif isImage: raw = await response.read()
                 else: text = await response.text()
-                error = jsond and (jsond.get('status') == 'ERROR' or jsond.get('error'))
-                if error: raise ClientError('status')
+                err = not jsond or jsond.get('status') == 'ERROR' or jsond.get('error')
+                if toJson and err: raise ClientError('status')
                 if proxy: proxy['errors'] = 0
                 return {'data': response, 'json': jsond, 'text': text, 'raw': raw}
         except Exception as e:
@@ -54,8 +54,7 @@ async def request(
             proxy['cooldown'] = time() + 3 * 60
             if proxy['errors'] < 10: continue
             if proxy['session']: await proxy['session'].close()
-            proxy['session'] = None
-            proxy['errors'] = 0
+            proxy['session'], proxy['errors'] = None, 0
         finally:
             if proxy:
                 proxy['lock'] = False
@@ -85,7 +84,7 @@ async def get_proxy() -> str | None:
     return proxy
 
 
-def to_jpeg(image: bytes):
+def to_jpeg(image: bytes) -> bytes:
     buffer = BytesIO()
     jpeg = Image.open(BytesIO(image))
     jpeg.convert('RGB').save(buffer, 'JPEG')

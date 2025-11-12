@@ -31,7 +31,7 @@ async def insert(listInfo: ExtListInfo, techInfo: TechInfo, id: int):
 async def collect(id: int, hash: str, paramId: int, offer: dict):
     # listInfo
     logging.info(f'Parsing car {id}-{hash}')
-    if not (rawlistInfo := list_info(offer)): return
+    if not (listInfo := list_info(offer)): return
     # techInfo
     datenow = f'{time() * 1000:.0f}'
     url = f'{URL}/cars/used/{id}-{hash}/'
@@ -43,16 +43,16 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
     # description & color
-    mark, model = rawlistInfo['mark'].lower(), rawlistInfo['model'].lower()
+    mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
     pageInfo = await request(url, headers=headers, retry=5)
     pageInfo = pageInfo['text'] or '' if pageInfo else ''
-    listInfo: ExtListInfo = {
-        **rawlistInfo,
+    extListInfo: ExtListInfo = {
+        **listInfo,
         **page_info(pageInfo),
         'autoru_hash': hash,
     }
-    await insert(listInfo, techInfo, id)
+    await insert(extListInfo, techInfo, id)
     logging.info(f'Parsing car {id}-{hash} completed')
 
 
