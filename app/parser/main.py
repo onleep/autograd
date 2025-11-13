@@ -99,11 +99,12 @@ async def parse_cars():
     marks = [
         'KIA',
         'BMW',
+        'FORD',
         'TOYOTA',
+        'NISSAN',
         'HYUNDAI',
         'MERCEDES',
         'VOLKSWAGEN',
-        'FORD',
     ]
     sorts = [
         'price_profitability-desc',
