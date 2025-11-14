@@ -33,13 +33,14 @@ def list_info(data: dict) -> ListInfo | None:
         if pclass not in whitelist: continue
         result['photos'][pclass] = 'https:' + i['sizes']['584x438']
     strict = ['year', 'owners', 'mileage', 'price', 'custom_cleared', 'mark', 'model']
-    if not all(result[k] for k in strict + ['photos']): return
+    if any(result[k] is None for k in strict) or not result['photos']: return
     return result
 
 
 def page_info(data: str) -> PageInfo | None:
     match = re.search(r'platform.*?},"description"\s*:\s*"((?:[^"\\]|\\.)*)"', data)
-    descript = match.group(1).replace('\\n', ' ') if match and match.lastindex else None
+    descript = match.group(1) if match and match.lastindex else None
+    if descript: descript = re.sub(r'(\\[ntr])|\s+', ' ', descript)
     match = re.search(r'Цвет\s*</div>\s*<a[^>]*>(.*?)</a>', data)
     color = match.group(1).capitalize() if match and match.lastindex else None
     match = re.search(r'"start_time":\s?"([^"]+)"', data)
