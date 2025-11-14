@@ -38,13 +38,15 @@ class ListInfo(TypedDict):
 
 class ExtListInfo(ListInfo):
     autoru_hash: str
+    published_at: str
     color: str | None
     description: str | None
 
 
 class PageInfo(TypedDict):
-    description: str | None
+    published_at: str
     color: str | None
+    description: str | None
 
 
 class TechInfo(TypedDict):

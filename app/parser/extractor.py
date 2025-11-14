@@ -37,12 +37,14 @@ def list_info(data: dict) -> ListInfo | None:
     return result
 
 
-def page_info(data: str) -> PageInfo:
-    match = re.search(r'platform.*?},"description":"(.*?)"', data, re.DOTALL)
+def page_info(data: str) -> PageInfo | None:
+    match = re.search(r'platform.*?},"description"\s*:\s*"((?:[^"\\]|\\.)*)"', data)
     descript = match.group(1).replace('\\n', ' ') if match and match.lastindex else None
-    match = re.search(r'Цвет\s*</div>\s*<a[^>]*>(.*?)</a>', data, re.DOTALL)
+    match = re.search(r'Цвет\s*</div>\s*<a[^>]*>(.*?)</a>', data)
     color = match.group(1).capitalize() if match and match.lastindex else None
-    return {'description': descript, 'color': color}
+    match = re.search(r'"start_time":\s?"([^"]+)"', data)
+    if not match or not match.lastindex or not (published_at := match.group(1)): return
+    return {'description': descript, 'color': color, 'published_at': published_at}
 
 
 def tech_info(data: dict) -> TechInfo | None:

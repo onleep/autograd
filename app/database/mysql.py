@@ -28,7 +28,7 @@ class Photos(Model):
     url = fields.CharField(max_length=255, unique=True)
     status = fields.IntField(default=0, index=True)
     created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True)
+    updated_at = fields.DatetimeField(auto_now=True, index=True)
 
     class Meta:  # type: ignore
         indexes = (('name', 'autoru_id'), )
@@ -44,6 +44,7 @@ class Attributes(Model):
     tags = fields.JSONField(null=True)
     predicted_prices = fields.JSONField(null=True)
     description = fields.TextField(null=True)
+    published_at = fields.DatetimeField()
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
 

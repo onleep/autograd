@@ -42,14 +42,15 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     techInfo = await request(url, toJson=True, retry=5, **kwargs)
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
-    # description & color
+    # pageInfo
     mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
     pageInfo = await request(url, headers=headers, retry=5)
-    pageInfo = pageInfo['text'] or '' if pageInfo else ''
+    if not pageInfo or not pageInfo['text']: return
+    if not (pageInfo := page_info(pageInfo['text'])): return
     extListInfo: ExtListInfo = {
         **listInfo,
-        **page_info(pageInfo),
+        **pageInfo,
         'autoru_hash': hash,
     }
     await insert(extListInfo, techInfo, id)
