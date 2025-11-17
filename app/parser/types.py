@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import TypedDict
 
 from aiohttp import ClientResponse, ClientSession
@@ -23,6 +24,8 @@ class Fingerpring(TypedDict):
 
 
 class ListInfo(TypedDict):
+    published_at: datetime
+    photos: dict[str, str]
     custom_cleared: bool
     price: float
     mileage: int
@@ -30,21 +33,23 @@ class ListInfo(TypedDict):
     model: str
     year: int
     mark: str
+    trim: str | None
     region: str | None
-    photos: dict[str, str]
+    user_id: str | None
+    is_dealer: bool | None
+    generation: str | None
     tags: list[str] | None
+    equipment: list[str] | None
     predicted_prices: dict[str, dict] | None
 
 
 class ExtListInfo(ListInfo):
     autoru_hash: str
-    published_at: str
     color: str | None
     description: str | None
 
 
 class PageInfo(TypedDict):
-    published_at: str
     color: str | None
     description: str | None
 

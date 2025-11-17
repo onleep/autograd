@@ -14,10 +14,11 @@ INFO_URL = f'{URL}/-/ajax/desktop-search'
 
 async def insert(listInfo: ExtListInfo, techInfo: TechInfo, id: int):
     photos = listInfo['photos']
+    toInsert = {k: v for k, v in listInfo.items() if v is not None}
     offer_cols = Offers._meta.fields_map.keys()
-    toOffers = {k: v for k, v in listInfo.items() if k in offer_cols}
+    toOffers = {k: v for k, v in toInsert.items() if k in offer_cols}
     attr_cols = Attributes._meta.fields_map.keys()
-    toAttrs = {k: v for k, v in listInfo.items() if k in attr_cols}
+    toAttrs = {k: v for k, v in toInsert.items() if k in attr_cols}
     toPhotos = [Photos(autoru_id=id, name=k, url=v) for k, v in photos.items()]
     try:
         await Offers.update_or_create(toOffers, autoru_id=id)
@@ -42,15 +43,14 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     techInfo = await request(url, toJson=True, retry=5, **kwargs)
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
-    # pageInfo
+    # description & color
     mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
     pageInfo = await request(url, headers=headers, retry=5)
-    if not pageInfo or not pageInfo['text']: return
-    if not (pageInfo := page_info(pageInfo['text'])): return
+    pageInfo = pageInfo['text'] or '' if pageInfo else ''
     extListInfo: ExtListInfo = {
         **listInfo,
-        **pageInfo,
+        **page_info(pageInfo),
         'autoru_hash': hash,
     }
     await insert(extListInfo, techInfo, id)
