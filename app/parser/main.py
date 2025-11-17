@@ -43,6 +43,20 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     techInfo = await request(url, toJson=True, retry=5, **kwargs)
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
+    # vinReport
+    jsonData = {
+        'offerID': f'{id}-{hash}',
+        'category': 'cars',
+        'isCardPage': True,
+        'geo_id': [],
+    }
+    url = f'{INFO_URL}/getRichVinReport/'
+    kwargs = {'headers': headers, 'json': jsonData}
+    vinReport = await request(url, toJson=True, retry=5, **kwargs)
+    vinReport = i if vinReport and (i := vinReport['json']) else {}
+    pts_owners = vinReport.get('report', {}).get('pts_owners', {})
+    owners_count = pts_owners.get('owners_count_report') or 0
+    listInfo['owners'] = max(listInfo['owners'], owners_count)
     # description & color
     mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
@@ -60,11 +74,18 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
 async def car_list(mark: str, sort: str):
     jsonData = {
         'with_discount': True,
+        'resolution_filter': [
+            'is_pts_ok',
+            'is_owners_ok',
+            'is_legal_ok',
+            'is_accidents_ok',
+        ],
         'catalog_filter': [{
             'mark': mark
         }],
         'section': 'used',
         'category': 'cars',
+        'search_tag': ['real_photo', ],
         'sort': sort,
         'output_type': 'list',
         'page': 1,
