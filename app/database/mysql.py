@@ -27,12 +27,15 @@ class Photos(Model):
     autoru_id: int  # created by autoru key
     name = fields.CharField(max_length=100)
     url = fields.CharField(max_length=255, unique=True)
-    status = fields.IntField(default=0, index=True)
+    status = fields.IntField(default=0)
     created_at = fields.DatetimeField(auto_now_add=True)
-    updated_at = fields.DatetimeField(auto_now=True, index=True)
+    updated_at = fields.DatetimeField(auto_now=True)
 
     class Meta:  # type: ignore
-        indexes = (('name', 'autoru_id'), )
+        indexes = (
+            ('name', 'autoru_id'),
+            ('status', 'updated_at'),
+        )
 
 
 class Attributes(Model):

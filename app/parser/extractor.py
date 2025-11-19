@@ -29,7 +29,7 @@ def list_info(data: dict) -> ListInfo | None:
         'mark': vehicle_info.get('mark_info', {}).get('code'),
         'model': vehicle_info.get('model_info', {}).get('code'),
         'trim': vehicle_info.get('complectation', {}).get('name'),
-        'generation': vehicle_info.get('super_gen', {}).get('name'),
+        'generation': vehicle_info.get('super_gen', {}).get('name') or None,
         'is_dealer': dict(dealer=True, user=False).get(user_ref[0]),
     }
     for i in data.get('state', {}).get('image_urls', []):

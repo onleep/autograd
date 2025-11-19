@@ -61,7 +61,7 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
     pageInfo = await request(url, headers=headers, retry=5)
-    pageInfo = pageInfo['text'] or '' if pageInfo else ''
+    pageInfo = i if pageInfo and (i := pageInfo['text']) else ''
     extListInfo: ExtListInfo = {
         **listInfo,
         **page_info(pageInfo),
@@ -71,17 +71,17 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     logging.info(f'Parsing car {id}-{hash} completed')
 
 
-async def car_list(mark: str, sort: str):
+async def car_list(mark: str, model: str, sort: str) -> bool:
     jsonData = {
         'with_discount': True,
         'resolution_filter': [
             'is_pts_ok',
-            'is_owners_ok',
             'is_legal_ok',
             'is_accidents_ok',
         ],
         'catalog_filter': [{
-            'mark': mark
+            'mark': mark,
+            'model': model
         }],
         'section': 'used',
         'category': 'cars',
@@ -92,7 +92,7 @@ async def car_list(mark: str, sort: str):
         'geo_id': [],
     }
     for pageNum in range(1, 100):
-        logging.info(f'Parcing {mark} sort {sort} page {pageNum}')
+        logging.info(f'Parcing {mark}:{model} sort {sort} page {pageNum}')
         jsonData['page'] = pageNum
         url = f'{INFO_URL}/listing/'
         datenow = f'{time() * 1000:.0f}'
@@ -113,7 +113,8 @@ async def car_list(mark: str, sort: str):
             if offerdb and offerdb.autoru_hash == hash: continue
             tasks.append(collect(id, hash, paramId, offer))
         await asyncio.gather(*tasks)
-    logging.info(f'Parcing {mark} sort {sort} completed')
+    logging.info(f'Parcing {mark}:{model} sort {sort} completed')
+    return True if jsonData['page'] == 99 else False
 
 
 @lock_func()
@@ -138,4 +139,13 @@ async def parse_cars():
         'year-desc',
         'year-asc',
     ]
-    [await car_list(mark, sort) for mark in marks for sort in sorts]
+    rows = await Photos.filter(mark__in=marks).group_by(
+        'autoru__mark',
+        'autoru__model',
+    ).values('autoru__mark', 'autoru__model')
+    mark_models = {mark: set(['']) for mark in marks}
+    [mark_models[r['autoru__mark']].add(r['autoru__model']) for r in rows]
+    for mark, models in mark_models.items():
+        for model in models:
+            for sort in sorts:
+                if not await car_list(mark, model, sort): break
