@@ -37,12 +37,14 @@ async def request(
             method = session.post if data or json else session.get
             async with method(url, params=params, data=data, **kwargs) as response:
                 if response.status != status: raise ClientError('http_code')
-                isImage = 'image' in response.headers['Content-Type']
+                isImage = 'image' in (cntype := response.headers['Content-Type'])
                 if toJson: jsond = await response.json(content_type=None)
                 elif isImage: raw = await response.read()
                 else: text = await response.text()
-                err = not jsond or jsond.get('status') == 'ERROR' or jsond.get('error')
-                if toJson and err: raise ClientError('status')
+                check = lambda jsond: jsond.get('error') or jsond.get('captcha')
+                err = not jsond or jsond.get('status') == 'ERROR' or check(jsond)
+                if text and 'text' not in cntype: raise ClientError('status')
+                elif toJson and err: raise ClientError('status')
                 if proxy: proxy['errors'] = 0
                 return {'data': response, 'json': jsond, 'text': text, 'raw': raw}
         except Exception as e:
