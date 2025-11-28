@@ -1,7 +1,7 @@
 import re
 from datetime import datetime
 
-from .types import ListInfo, PageInfo, TechInfo
+from .types import ListInfo, PageInfo, TechInfo, VinInfo
 
 
 def list_info(data: dict) -> ListInfo | None:
@@ -58,6 +58,26 @@ def page_info(data: str) -> PageInfo:
     match = re.search(r'Цвет\s*</div>\s*<a[^>]*>(.*?)</a>', data)
     color = match.group(1).capitalize() if match and match.lastindex else None
     return {'description': descript, 'color': color}
+
+
+def vin_info(data: dict) -> VinInfo:
+    report = data.get('report', {})
+    vinData = {
+        'dtp': report.get('dtp', {}).get('status'),
+        'pts': report.get('pts_info', {}).get('status'),
+        'owners': report.get('pts_owners', {}).get('status'),
+        'pts_type': report.get('pts_info', {}).get('pts_type'),
+        'wanted': report.get('legal', {}).get('wanted_status'),
+        'gibdd': report.get('pts_info', {}).get('registered_in_gibdd'),
+        'constraints': report.get('legal', {}).get('constraints_status'),
+        'history_records': report.get('history', {}).get('record_count'),
+        'offer_records': report.get('autoru_offers', {}).get('record_count'),
+        'service_records': report.get('auto_service', {}).get('record_count'),
+        'mileage_records': report.get('mileages_graph', {}).get('record_count'),
+        'pts_owners': report.get('pts_owners', {}).get('owners'),
+    }
+    if not any(vinData.values()): vinData = None
+    return {'vin': vinData}
 
 
 def tech_info(data: dict) -> TechInfo | None:

@@ -4,7 +4,7 @@ from time import time
 
 from database.mysql import Attributes, Offers, Photos, Specifications
 
-from .extractor import list_info, page_info, tech_info
+from .extractor import list_info, page_info, tech_info, vin_info
 from .types import ExtListInfo, TechInfo
 from .utils import lock_func, request
 
@@ -40,7 +40,7 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     jsonData = {'tech_param_id': paramId, 'geo_id': []}
     kwargs = {'headers': headers, 'json': jsonData}
     url = f'{INFO_URL}/getCatalogTechInfo/'
-    techInfo = await request(url, toJson=True, retry=5, **kwargs)
+    techInfo = await request(url, toJson=True, retry=3, **kwargs)
     if not techInfo or not techInfo['json']: return
     if not (techInfo := tech_info(techInfo['json'])): return
     # vinReport
@@ -52,7 +52,7 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     }
     url = f'{INFO_URL}/getRichVinReport/'
     kwargs = {'headers': headers, 'json': jsonData}
-    vinReport = await request(url, toJson=True, retry=5, **kwargs)
+    vinReport = await request(url, toJson=True, retry=3, **kwargs)
     vinReport = i if vinReport and (i := vinReport['json']) else {}
     pts_owners = vinReport.get('report', {}).get('pts_owners', {})
     owners_count = pts_owners.get('owners_count_report') or 0
@@ -60,10 +60,11 @@ async def collect(id: int, hash: str, paramId: int, offer: dict):
     # description & color
     mark, model = listInfo['mark'].lower(), listInfo['model'].lower()
     url = f'{URL}/cars/used/sale/{mark}/{model}/{id}-{hash}/'
-    pageInfo = await request(url, headers=headers, retry=5)
+    pageInfo = await request(url, headers=headers, retry=3)
     pageInfo = i if pageInfo and (i := pageInfo['text']) else ''
     extListInfo: ExtListInfo = {
         **listInfo,
+        **vin_info(vinReport),
         **page_info(pageInfo),
         'autoru_hash': hash,
     }
@@ -99,7 +100,7 @@ async def car_list(mark: str, model: str, sort: str) -> bool:
         hurl = f'{URL}/cars/{mark}/used/?sort={sort}&page={pageNum}'
         headers = {'refer': hurl, 'x-retpath-y': hurl, 'x-client-date': datenow}
         kwargs = {'headers': headers, 'json': jsonData}
-        cars = await request(url, toJson=True, retry=5, **kwargs)
+        cars = await request(url, toJson=True, retry=3, **kwargs)
         if not cars or not (cars := cars['json']): continue
         if cars.get('pagination', {}).get('page') != pageNum: break
         tasks = []
@@ -139,12 +140,12 @@ async def parse_cars():
         'year-desc',
         'year-asc',
     ]
-    rows = await Photos.filter(mark__in=marks).group_by(
-        'autoru__mark',
-        'autoru__model',
-    ).values('autoru__mark', 'autoru__model')
+    rows = await Offers.filter(mark__in=marks).group_by(
+        'mark',
+        'model',
+    ).values('mark', 'model')
     mark_models = {mark: set(['']) for mark in marks}
-    [mark_models[r['autoru__mark']].add(r['autoru__model']) for r in rows]
+    [mark_models[r['mark']].add(r['model']) for r in rows]
     for mark, models in mark_models.items():
         for model in models:
             for sort in sorts:

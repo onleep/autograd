@@ -54,7 +54,7 @@ async def request(
             session = None
             proxy['errors'] += 1
             proxy['cooldown'] = time() + 3 * 60
-            if proxy['errors'] < 10: continue
+            if proxy['errors'] < 5: continue
             if proxy['session']: await proxy['session'].close()
             proxy['session'], proxy['errors'] = None, 0
         finally:

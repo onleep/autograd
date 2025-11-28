@@ -45,6 +45,7 @@ class ListInfo(TypedDict):
 
 class ExtListInfo(ListInfo):
     autoru_hash: str
+    vin: dict | None
     color: str | None
     description: str | None
 
@@ -52,6 +53,10 @@ class ExtListInfo(ListInfo):
 class PageInfo(TypedDict):
     color: str | None
     description: str | None
+
+
+class VinInfo(TypedDict):
+    vin: dict | None
 
 
 class TechInfo(TypedDict):

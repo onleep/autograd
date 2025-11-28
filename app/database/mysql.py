@@ -50,6 +50,7 @@ class Attributes(Model):
     region = fields.CharField(max_length=255, null=True)
     equipment = fields.JSONField(null=True)
     tags = fields.JSONField(null=True)
+    vin = fields.JSONField(null=True)
     predicted_prices = fields.JSONField(null=True)
     description = fields.TextField(null=True)
     published_at = fields.DatetimeField()
