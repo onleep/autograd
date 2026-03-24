@@ -1,4 +1,4 @@
-from config import DB_NAME, DB_PASS
+from config import DB_NAME, DB_PASS, DB_ADDR
 from tortoise import Tortoise, fields
 from tortoise.models import Model
 
@@ -76,8 +76,8 @@ class Specifications(Model):
 
 async def dbinit():
     await Tortoise.init(
-        db_url=f'mysql://root:{DB_PASS}@mysql/{DB_NAME}',
-        modules={'models': ['database.mysql']},
+        db_url=f'mysql://root:{DB_PASS}@{DB_ADDR}/{DB_NAME}',
+        modules={'models': ['clients.database']},
     )
     await Tortoise.generate_schemas()
 

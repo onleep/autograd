@@ -7,8 +7,12 @@ from dotenv import dotenv_values
 env = dotenv_values()
 S3_ID = env['S3_ID'] or ''
 S3_KEY = env['S3_KEY'] or ''
+S3_ADDR = env['S3_ADDR'] or ''
 DB_NAME = env['DB_NAME'] or ''
 DB_PASS = env['DB_PASS'] or ''
+DB_ADDR = env['DB_ADDR'] or ''
+ML_MODE = env['ML_MODE'] or ''
+TRAIN_MODE = env['TRAIN_MODE'] or ''
 PROXIES = [k for i in range(100) if (k := env.get(f'PROXY{i}'))]
 
 # logger

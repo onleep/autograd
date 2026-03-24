@@ -2,7 +2,7 @@ import asyncio
 import logging
 from time import time
 
-from database.mysql import Attributes, Offers, Photos, Specifications
+from clients.database import Attributes, Offers, Photos, Specifications
 
 from .extractor import list_info, page_info, tech_info, vin_info
 from .types import ExtListInfo, TechInfo

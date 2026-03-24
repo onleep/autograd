@@ -1,8 +1,8 @@
 import asyncio
 import logging
 
-from database.mysql import Photos
-from s3.main import s3_upload
+from clients.database import Photos
+from clients.s3 import s3_upload
 from tortoise.expressions import Q
 from tortoise.functions import Count
 from tortoise.queryset import QuerySet

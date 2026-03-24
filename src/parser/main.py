@@ -1,9 +1,10 @@
 import asyncio
 
-from database.mysql import dbclose, dbinit
-from parser.session import session_close
-from s3.main import s3close, s3init
-from sheduler.crontab import cron
+from clients.database import dbclose, dbinit
+from clients.s3 import s3close, s3init
+
+from .app.session import session_close
+from .sheduler.crontab import cron
 
 
 async def main() -> None:
@@ -13,5 +14,5 @@ async def main() -> None:
     await asyncio.gather(dbclose(), s3close())
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     asyncio.run(main())
