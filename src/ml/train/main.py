@@ -47,9 +47,11 @@ def get_pools(data: pd.DataFrame, columns: list) -> tuple[Pool, Pool, Pool]:
         stratify=x_temp['mark'],
     )
     cat_features = x_train.select_dtypes(include='object').columns.to_list()
-    train_pool = Pool(x_train, label=y_train, cat_features=cat_features)
-    test_pool = Pool(x_test, label=y_test, cat_features=cat_features)
-    val_pool = Pool(x_val, label=y_val, cat_features=cat_features)
+    params = {'cat_features': cat_features}
+    if TRAIN_MODE == '2': params['text_features'] = ['description']  # fmt: off
+    train_pool = Pool(x_train, label=y_train, **params)
+    test_pool = Pool(x_test, label=y_test, **params)
+    val_pool = Pool(x_val, label=y_val, **params)
     return train_pool, test_pool, val_pool
 
 
@@ -64,10 +66,10 @@ def eval_metrics(model: CatBoostRegressor, val_pool: Pool) -> dict[str, float]:
     }
 
 
-async def upload_model(model: CatBoostRegressor) -> None:
+async def upload_model(model: CatBoostRegressor, metric: float) -> None:
     with tempfile.NamedTemporaryFile() as file:
         model.save_model(file.name)
-        name = f'model_{date.today()}.cbm'
+        name = f'model_{date.today()}_{metric:.2f}.cbm'
         await s3_upload(open(file.name, 'rb'), 'data', name)
 
 
@@ -75,14 +77,16 @@ async def train() -> None:
     logging.info('Clean outliers')
     data = clean_outliers(await load_data())
     columns = ['price', 'photos_name', 'predicted_prices', 'description']
-    if TRAIN_MODE == '1':
-        logging.info('Embedding')
-        data = embedding(data)
+    if TRAIN_MODE in ('1', '2'):
         columns.remove('description')
+        if TRAIN_MODE == '2':
+            logging.info('Embedding')
+            data = embedding(data)
     train_pool, test_pool, val_pool = get_pools(data, columns)
     model = CatBoostRegressor(random_seed=42)
     logging.info('Fit model')
-    model.fit(train_pool, eval_set=val_pool)
+    model.fit(train_pool, eval_set=val_pool, early_stopping_rounds=100)
     logging.info('Upload model')
-    await upload_model(model)
-    logging.info({'metrics': eval_metrics(model, test_pool)})
+    metrics = eval_metrics(model, test_pool)
+    await upload_model(model, metrics['R2'])
+    logging.info({'metrics': metrics})
