@@ -1,5 +1,6 @@
 .env
 logs
+compose.dev.yml
 
 # Python-generated files
 __pycache__/
