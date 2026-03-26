@@ -10,6 +10,7 @@ def embedding(data: pd.DataFrame) -> pd.DataFrame:
         batch_size=16,
         convert_to_numpy=True,
         show_progress_bar=True,
+        normalize_embeddings=True,
     )
     embeds = pd.DataFrame(
         embeds,
