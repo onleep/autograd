@@ -1,4 +1,4 @@
-from io import BytesIO
+import tempfile
 
 import joblib
 import numpy as np
@@ -13,9 +13,9 @@ async def to_mlb(column: pd.Series, name: str) -> pd.DataFrame:
     s = column.map(lambda x: x if isinstance(x, (list, np.ndarray)) else [])
     mlb = MultiLabelBinarizer(sparse_output=False)
     X_target = np.asarray(mlb.fit_transform(s))
-    buffer = BytesIO()
-    joblib.dump(mlb, buffer)
-    await s3_upload(buffer, 'data', f'mlb_{name}.pkl')
+    with tempfile.NamedTemporaryFile() as file:
+        joblib.dump(mlb, file.name)
+        await s3_upload(file.read(), 'data', f'mlb_{name}.pkl')
     return pd.DataFrame(
         X_target,
         index=column.index,

@@ -70,7 +70,7 @@ async def upload_model(model: CatBoostRegressor, metric: float) -> None:
     with tempfile.NamedTemporaryFile() as file:
         model.save_model(file.name)
         name = f'model_{date.today()}_{metric:.2f}.cbm'
-        await s3_upload(open(file.name, 'rb'), 'data', name)
+        await s3_upload(file.read(), 'data', name)
 
 
 async def train() -> None:

@@ -21,7 +21,7 @@ async def prepare_specs() -> pd.DataFrame:
     df_specs.drop(columns=drop_columns, inplace=True)
     # base
     df_values = prepare_df(df_specs['base'])
-    df_values.drop(columns=['total_range'], inplace=True)
+    df_values.drop(columns=['total_range'], inplace=True, errors='ignore')
     df_values = df_values.add_prefix('base_')
     df_specs = df_specs.join(df_values)
     df_specs.drop(columns=['base'], inplace=True)
@@ -125,13 +125,13 @@ async def prepare_specs() -> pd.DataFrame:
     df_values['consumption_highway'] = parts[1]
     df_values['consumption_mixed'] = parts[2]
     df_values.drop(columns=['consumption'], inplace=True)
-    df_values.drop(columns=['consumption_kwt'], inplace=True)
+    df_values.drop(columns=['consumption_kwt'], inplace=True, errors='ignore')
     df_values = df_values.add_prefix('performance_indicators_')
     df_specs = df_specs.join(df_values)
     df_specs.drop(columns=['performance_indicators'], inplace=True)
     # engine
     df_values = prepare_df(df_specs['engine'])
-    df_values.drop(columns=['consumption_calc'], inplace=True)
+    df_values.drop(columns=['consumption_calc'], inplace=True, errors='ignore')
     ## diameter
     parts = df_values['diameter'].str.split('x', expand=True)
     df_values['diameter_x0'] = parts[0].str.replace(',', '.', 1).astype(float)
@@ -161,7 +161,7 @@ async def prepare_specs() -> pd.DataFrame:
     df_specs = df_specs.join(df_values)
     # final
     df_specs.drop(columns=['engine'], inplace=True)
-    df_specs.drop(columns=['base_electric_range'], inplace=True)
+    df_specs.drop(columns=['base_electric_range'], inplace=True, errors='ignore')
     mask = df_specs['engine_engine_list'].apply(
         lambda x: isinstance(x, float) and not pd.isna(x)
     )

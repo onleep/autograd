@@ -14,7 +14,7 @@ from .specs import prepare_specs
 async def upload_df(data: pd.DataFrame, name: str):
     with tempfile.NamedTemporaryFile() as file:
         data.to_parquet(file.name, index=False)
-        await s3_upload(open(file.name, 'rb'), 'data', f'{name}.parquet')
+        await s3_upload(file.read(), 'data', f'{name}.parquet')
 
 
 async def preprocess():
