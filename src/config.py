@@ -15,6 +15,7 @@ DB_ADDR = env['DB_ADDR'] or ''
 ML_MODE = env['ML_MODE'] or ''
 TRAIN_MODE = env['TRAIN_MODE'] or ''
 ## api
+API_ADDR  = env['API_ADDR'] or ''
 API_MODEL = env['API_MODEL'] or ''
 ## parser
 PROXIES = [k for i in range(100) if (k := env.get(f'PROXY{i}'))]

@@ -28,6 +28,12 @@ api = [
     "autograd[ml]",
     "fastapi[standard]>=0.135.2",
 ]
+frontend = [
+    "pandas>=2.3.3",
+    "pyarrow>=23.0.1",
+    "requests>=2.33.1",
+    "streamlit>=1.55.0",
+]
 
 [tool.yapf]
 column_limit = 88
