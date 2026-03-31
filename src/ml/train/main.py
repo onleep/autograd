@@ -55,9 +55,9 @@ def get_pools(data: pd.DataFrame, columns: list) -> tuple[Pool, Pool, Pool]:
     return train_pool, test_pool, val_pool
 
 
-def eval_metrics(model: CatBoostRegressor, val_pool: Pool) -> dict[str, float]:
-    pred = np.expm1(model.predict(val_pool))
-    true = np.expm1(val_pool.get_label())
+def eval_metrics(model: CatBoostRegressor, test_pool: Pool) -> dict[str, float]:
+    pred = np.expm1(model.predict(test_pool))
+    true = np.expm1(test_pool.get_label())
     return {
         'R2': r2_score(true, pred),
         'MAE': mean_absolute_error(true, pred),
