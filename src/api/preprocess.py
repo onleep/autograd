@@ -39,10 +39,25 @@ def mlb_encode(mlb: MultiLabelBinarizer, column: pd.Series, name: str) -> pd.Dat
     )
 
 
+def flatten_specs(values: dict) -> dict:
+    flat: dict = {}
+    for section, payload in values.items():
+        if not isinstance(payload, dict):
+            flat[section] = payload
+            continue
+        for key, value in payload.items():
+            if isinstance(value, dict):
+                for inner_key, inner_value in value.items():
+                    flat[f'{section}_{key}_{inner_key}'] = inner_value
+                continue
+            flat[f'{section}_{key}'] = value
+    return flat
+
+
 def prepredict(request: dict, state: AppState):
     data_dict = request['offer']
     data_dict.update(request['attributes'] or {})
-    data_dict.update(request['specifications'] or {})
+    data_dict.update(flatten_specs(request['specifications'] or {}))
     data = pd.DataFrame([data_dict])
     if 'equipment' in data:
         df_equip = mlb_encode(state.mlb_quip, data['equipment'], 'equip')
