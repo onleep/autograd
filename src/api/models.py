@@ -1,5 +1,6 @@
 from typing import Any
 
+import pandas as pd
 from catboost import CatBoostRegressor
 from pydantic import BaseModel
 from sklearn.preprocessing import MultiLabelBinarizer
@@ -9,6 +10,7 @@ class AppState(BaseModel):
     model: CatBoostRegressor
     mlb_quip: MultiLabelBinarizer
     mlb_tags: MultiLabelBinarizer
+    train_df: pd.DataFrame
 
     class Config:
         arbitrary_types_allowed = True

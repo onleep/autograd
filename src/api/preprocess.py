@@ -14,19 +14,22 @@ from config import API_MODEL
 from .models import AppState
 
 
-async def load_model():
-    model_raw, mlb_tags_raw, mlb_quip_raw = await asyncio.gather(
+async def load_artifacts():
+    model_raw, mlb_tags_raw, mlb_quip_raw, train_df_raw = await asyncio.gather(
         s3_download('data', API_MODEL),
         s3_download('data', 'mlb_tags.pkl'),
         s3_download('data', 'mlb_equip.pkl'),
+        s3_download('data', 'train_df.parquet'),
     )
     with tempfile.NamedTemporaryFile() as file:
         file.write(model_raw)
         model = CatBoostRegressor()
         model.load_model(file.name)
+    train_df: pd.DataFrame = pd.read_parquet(BytesIO(train_df_raw))
+    train_df = train_df.drop(columns=['price', 'photos_name', 'predicted_prices'])
     mlb_tags: MultiLabelBinarizer = joblib.load(BytesIO(mlb_tags_raw))
     mlb_quip: MultiLabelBinarizer = joblib.load(BytesIO(mlb_quip_raw))
-    return model, mlb_tags, mlb_quip
+    return model, mlb_tags, mlb_quip, train_df
 
 
 def mlb_encode(mlb: MultiLabelBinarizer, column: pd.Series, name: str) -> pd.DataFrame:
@@ -54,22 +57,37 @@ def flatten_specs(values: dict) -> dict:
     return flat
 
 
-def prepredict(request: dict, state: AppState):
+def get_subset(data: pd.Series, train_df: pd.DataFrame) -> pd.DataFrame:
+    importants = ['mark', 'model', 'year', 'generation', 'trim']
+    cols = [c for c in importants if c in data and pd.notna(data[c])]
+    return train_df[(train_df[cols] == data[cols]).all(1)]
+
+
+def fill_data(data: pd.Series, subset: pd.DataFrame, cat_cols: list) -> pd.Series:
+    data = data[data.index.intersection(subset.columns)]
+    subset[cat_cols] = subset[cat_cols].fillna('').astype(str)
+    for col in subset.columns:
+        if col in data and pd.notna(data[col]):
+            continue
+        elif col not in cat_cols:
+            data[col] = subset[col].mean()
+        else:
+            data[col] = subset[col].mode().iloc[0]
+    return data
+
+
+def prepredict(request: dict, state: AppState) -> pd.Series:
     data_dict = request['offer']
     data_dict.update(request['attributes'] or {})
     data_dict.update(flatten_specs(request['specifications'] or {}))
-    data = pd.DataFrame([data_dict])
-    if 'equipment' in data:
-        df_equip = mlb_encode(state.mlb_quip, data['equipment'], 'equip')
-        data = data.drop(columns=['equipment'])
-        data = data.join(df_equip)
-    if 'tags' in data:
-        df_tags = mlb_encode(state.mlb_tags, data['tags'], 'tags')
-        data = data.drop(columns=['tags'])
-        data = data.join(df_tags)
+    data = pd.Series(data_dict)
+    if data['equipment'] is not None:
+        data = data.join(mlb_encode(state.mlb_quip, data['equipment'], 'equip'))
+    if data['tags'] is not None:
+        data = data.join(mlb_encode(state.mlb_tags, data['tags'], 'tags'))
+    subset = get_subset(data, state.train_df)
     assert state.model.feature_names_ is not None
     cat_idx = state.model.get_cat_feature_indices()
-    data = data.reindex(columns=state.model.feature_names_)
     cat_cols = [state.model.feature_names_[i] for i in cat_idx]
-    data[cat_cols] = data[cat_cols].fillna('').astype(str)
-    return data
+    data = fill_data(data, subset, cat_cols)
+    return data.reindex(state.model.feature_names_)
