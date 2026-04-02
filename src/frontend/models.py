@@ -1,7 +1,7 @@
 from typing import TypedDict, TypeGuard
 
-PeerFilters = dict[str, str | int | None]
-PeerTier = tuple[PeerFilters, int, str]
+SimilarFilters = dict[str, str | int | None]
+SimilarTier = tuple[SimilarFilters, int, str]
 
 
 class OfferData(TypedDict):
@@ -22,7 +22,7 @@ class ReadyOffer(TypedDict):
     mileage: int
 
 
-class PeerStats(TypedDict):
+class SimilarStats(TypedDict):
     count: float
     median_price: float
     avg_mileage: float

@@ -7,9 +7,9 @@ from config import API_ADDR
 from frontend.data import filter_data
 from frontend.models import (
     AttributesData,
-    PeerStats,
-    PeerTier,
     ReadyOffer,
+    SimilarStats,
+    SimilarTier,
     SpecificationsData,
 )
 
@@ -38,57 +38,59 @@ def get_attrs() -> AttributesData:
     return {'pub_year': now.year, 'pub_month': now.month}
 
 
-def build_peer_tiers(offer: ReadyOffer) -> list[PeerTier]:
+def build_similar_tiers(offer: ReadyOffer) -> list[SimilarTier]:
     def pick(*keys: str) -> dict[str, str | int | None]:
         return {key: offer[key] for key in keys}
 
-    tiers: list[PeerTier] = []
+    MIN_OFFERS = 10
+    tiers: list[SimilarTier] = []
     default = ('mark', 'model', 'year')
     if offer['trim']:
-        tiers.append((pick(*default, 'generation', 'trim'), 12, 'этой же комплектации'))
+        tiers.append(
+            (pick(*default, 'generation', 'trim'), MIN_OFFERS, 'этой же комплектации')
+        )
     if offer['generation']:
-        tiers.append((pick(*default, 'generation'), 18, 'этой же генерации'))
+        tiers.append((pick(*default, 'generation'), MIN_OFFERS, 'этого же поколения'))
     tiers.extend(
         [
-            (pick(*default), 25, 'этой же модели и года'),
-            (pick('mark', 'model'), 40, 'этой же модели'),
-            ({'mark': offer['mark']}, 80, 'этой марки'),
+            (pick(*default), MIN_OFFERS, 'этой же модели и года'),
+            (pick('mark', 'model'), MIN_OFFERS, 'этой же модели'),
         ]
     )
     return tiers
 
 
-def find_peer_group(
+def find_similar_group(
     df: pd.DataFrame,
     offer: ReadyOffer,
 ) -> tuple[pd.DataFrame, str]:
-    fallback = filter_data(df, mark=offer['mark'])
-    label = 'этой марки'
-    for filters, min_rows, tier_label in build_peer_tiers(offer):
-        peers = filter_data(df, **filters)
-        if not peers.empty:
-            fallback = peers
+    fallback = filter_data(df, mark=offer['mark'], model=offer['model'])
+    label = 'этой же модели'
+    for filters, min_rows, tier_label in build_similar_tiers(offer):
+        similars = filter_data(df, **filters)
+        if not similars.empty:
+            fallback = similars
             label = tier_label
-        if len(peers) >= min_rows:
-            return peers, tier_label
+        if len(similars) >= min_rows:
+            return similars, tier_label
     return fallback, label
 
 
-def summarize_peers(
-    peers: pd.DataFrame,
+def summarize_similars(
+    similars: pd.DataFrame,
     offer: ReadyOffer,
     price: float,
-) -> PeerStats:
-    median_price = float(peers['price'].median())
-    avg_mileage = float(peers['mileage'].mean())
+) -> SimilarStats:
+    median_price = float(similars['price'].median())
+    avg_mileage = float(similars['mileage'].mean())
     return {
-        'count': float(len(peers)),
+        'count': float(len(similars)),
         'median_price': median_price,
         'avg_mileage': avg_mileage,
         'price_gap': float(price - median_price),
         'mileage_gap': float(float(offer['mileage']) - avg_mileage),
-        'cheaper_share': float((peers['price'] > price).mean() * 100),
+        'cheaper_share': float((similars['price'] > price).mean() * 100),
         'lower_mileage_share': float(
-            (peers['mileage'] > offer['mileage']).mean() * 100
+            (similars['mileage'] > offer['mileage']).mean() * 100
         ),
     }

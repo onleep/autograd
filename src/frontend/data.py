@@ -82,9 +82,3 @@ def text_options(
 def year_options(df: pd.DataFrame) -> list[int]:
     years = df['year'].dropna().astype(int).unique().tolist()
     return sorted(years, reverse=True)
-
-
-def numeric_bounds(df: pd.DataFrame, column: str) -> tuple[int | None, int | None]:
-    values = df[column].dropna()
-    if values.empty: return None, None  # fmt: off
-    return int(values.min()), int(values.max())

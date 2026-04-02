@@ -7,12 +7,11 @@ import streamlit as st
 from frontend.data import (
     SPEC_COLUMNS,
     filter_data,
-    numeric_bounds,
     text_options,
     year_options,
 )
-from frontend.models import OfferData, PeerStats, ReadyOffer, SpecificationsData
-from frontend.pricing import find_peer_group, summarize_peers
+from frontend.models import OfferData, ReadyOffer, SimilarStats, SpecificationsData
+from frontend.pricing import find_similar_group, summarize_similars
 from frontend.utils import (
     current_offer,
     current_specifications,
@@ -189,7 +188,6 @@ def render_optional_fields(
         render_optional_number(
             'Мощность, л.с.',
             'power',
-            df,
             disabled,
             step=10,
         )
@@ -204,32 +202,30 @@ def render_optional_fields(
     st.markdown('**Двигатель**')
     row = st.columns(2)
     with row[0]:
-        render_optional_number('Мощность, кВт', 'max_power_kw', df, disabled, step=10)
+        render_optional_number('Мощность, кВт', 'max_power_kw', disabled, step=10)
     with row[1]:
         render_optional_number(
-            'Объём двигателя, см³', 'displacement', df, disabled, step=100
+            'Объём двигателя, см³', 'displacement', disabled, step=100
         )
     st.markdown('**Размеры**')
     row = st.columns(3)
     with row[0]:
-        render_optional_number('Диаметр диска, дюймы', 'tires_rim_min', df, disabled)
+        render_optional_number('Диаметр диска, дюймы', 'tires_rim_min', disabled)
     with row[1]:
-        render_optional_number('Ширина, мм', 'width', df, disabled, step=10)
+        render_optional_number('Ширина, мм', 'width', disabled, step=10)
     with row[2]:
-        render_optional_number('Высота, мм', 'height', df, disabled, step=10)
+        render_optional_number('Высота, мм', 'height', disabled, step=10)
     row = st.columns(2)
     with row[0]:
-        render_optional_number('Ширина диска, дюймы', 'disk_x1_min', df, disabled)
+        render_optional_number('Ширина диска, дюймы', 'disk_x1_min', disabled)
     with row[1]:
-        render_optional_number(
-            'Ширина шин, мм', 'wheels_size_x0', df, disabled, step=10
-        )
+        render_optional_number('Ширина шин, мм', 'wheels_size_x0', disabled, step=10)
     st.markdown('**Масса**')
     row = st.columns(2)
     with row[0]:
-        render_optional_number('Полная масса, кг', 'full_weight', df, disabled, step=50)
+        render_optional_number('Полная масса, кг', 'full_weight', disabled, step=50)
     with row[1]:
-        render_optional_number('Снаряжённая масса, кг', 'weight', df, disabled, step=50)
+        render_optional_number('Снаряжённая масса, кг', 'weight', disabled, step=50)
 
 
 def render_optional_select(
@@ -252,17 +248,14 @@ def render_optional_select(
 def render_optional_number(
     label: str,
     key: str,
-    df: pd.DataFrame,
     disabled: bool,
     step: int = 1,
 ) -> None:
-    min_value, max_value = numeric_bounds(df, key)
     st.number_input(
         label,
         key=key,
         value=None,
-        min_value=min_value,
-        max_value=max_value,
+        min_value=0,
         step=step,
         disabled=disabled,
         on_change=reset_fields,
@@ -270,18 +263,18 @@ def render_optional_number(
 
 
 def render_result(df: pd.DataFrame, offer: ReadyOffer, price: float) -> None:
-    peers, scope = find_peer_group(df, offer)
-    stats = summarize_peers(peers, offer, price)
+    similars, scope = find_similar_group(df, offer)
+    stats = summarize_similars(similars, offer, price)
     st.subheader('Результат прогноза')
     render_metrics(price, stats, scope)
     charts = st.columns(2)
     with charts[0]:
         render_history_chart(df, offer)
     with charts[1]:
-        render_peer_chart(peers, offer, price, scope)
+        render_similar_chart(similars, offer, price)
 
 
-def render_metrics(price: float, stats: PeerStats, scope: str) -> None:
+def render_metrics(price: float, stats: SimilarStats, scope: str) -> None:
     col1, col2, col3 = st.columns(3)
     col1.metric(
         'Средний пробег 🛞',
@@ -299,7 +292,7 @@ def render_metrics(price: float, stats: PeerStats, scope: str) -> None:
     render_insights(stats, scope)
 
 
-def render_insights(stats: PeerStats, scope: str) -> None:
+def render_insights(stats: SimilarStats, scope: str) -> None:
     row = st.columns(3)
     price_word = 'дешевле' if stats['price_gap'] < 0 else 'дороже'
     mileage_word = 'ниже' if stats['mileage_gap'] < 0 else 'выше'
@@ -318,7 +311,7 @@ def render_insights(stats: PeerStats, scope: str) -> None:
         (
             '📈 Рынок',
             f'Сравнение построено по {format_number(stats["count"])} '
-            f'объявлениям, а цена ниже примерно у '
+            f'объявлениям, а цена ниже, чем у '
             f'{stats["cheaper_share"]:.0f}% рынка',
         ),
     ]
@@ -359,20 +352,19 @@ def render_history_chart(df: pd.DataFrame, offer: ReadyOffer) -> None:
         st.altair_chart(chart, width='stretch')
 
 
-def render_peer_chart(
-    peers: pd.DataFrame,
+def render_similar_chart(
+    similars: pd.DataFrame,
     offer: ReadyOffer,
     price: float,
-    scope: str,
 ) -> None:
     with st.container(border=True, height='stretch'):
         st.caption('🎯 Прогноз на фоне похожих объявлений')
-        if peers.empty or scope == 'этой марки':
+        if similars.empty:
             st.info(
                 'Для этой машины мало данных чтобы показать график похожих объявлений'
             )
             return
-        sample = peers.sample(min(len(peers), 500), random_state=42)
+        sample = similars.sample(min(len(similars), 500), random_state=42)
         focus = pd.DataFrame([{'mileage': offer['mileage'], 'price': price}])
         points = (
             alt.Chart(sample)

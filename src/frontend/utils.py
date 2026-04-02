@@ -71,17 +71,13 @@ def current_offer() -> OfferData:
 
 def current_specifications() -> SpecificationsData | None:
     specifications: SpecificationsData = {}
-    base = read_base_specifications()
-    engine = read_engine_specifications()
-    sizes = read_sizes_specifications()
-    volume = read_volume_specifications()
-    if base:
+    if base := read_base_specifications():
         specifications['base'] = base
-    if engine:
+    if engine := read_engine_specifications():
         specifications['engine'] = engine
-    if sizes:
+    if sizes := read_sizes_specifications():
         specifications['sizes'] = sizes
-    if volume:
+    if volume := read_volume_specifications():
         specifications['volume_and_mass'] = volume
     return specifications or None
 
