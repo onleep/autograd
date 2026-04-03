@@ -35,6 +35,8 @@ class Attributes(BaseModel):
     equipment: list[str] | None = None
     pub_year: int | None = None
     pub_month: int | None = None
+    tags_equitable_price: int | None = 1
+    tags_increased_price: int | None = 0
 
 
 class SpecificationsBase(BaseModel):
