@@ -18,17 +18,11 @@ from clients.s3 import s3_download, s3_upload
 from config import TRAIN_MODE
 
 from .embedding import embedding
-from .outliers import clean_outliers
 
 
 async def load_data() -> pd.DataFrame:
     data = await s3_download('data', 'train_df.parquet')
-    data = pd.read_parquet(BytesIO(data))
-    obj_cols = data.select_dtypes(include='object').columns.difference(
-        ['predicted_prices', 'photos_name']
-    )
-    data[obj_cols] = data[obj_cols].fillna('').astype(str)
-    return data
+    return pd.read_parquet(BytesIO(data))
 
 
 def get_pools(data: pd.DataFrame, columns: list) -> tuple[Pool, Pool, Pool]:
@@ -74,8 +68,8 @@ async def upload_model(model: CatBoostRegressor, metric: float) -> None:
 
 
 async def train() -> None:
-    logging.info('Clean outliers')
-    data = clean_outliers(await load_data())
+    logging.info('Load data')
+    data = await load_data()
     columns = ['price', 'photos_name', 'predicted_prices', 'description']
     if TRAIN_MODE in ('1', '2'):
         columns.remove('description')
