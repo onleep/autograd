@@ -10,7 +10,7 @@ class AppState(BaseModel):
     model: CatBoostRegressor
     mlb_quip: MultiLabelBinarizer
     mlb_tags: MultiLabelBinarizer
-    train_df: pd.DataFrame
+    aggs_df: pd.DataFrame
 
     class Config:
         arbitrary_types_allowed = True

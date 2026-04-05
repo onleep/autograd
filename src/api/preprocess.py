@@ -15,21 +15,20 @@ from .models import AppState
 
 
 async def load_artifacts():
-    model_raw, mlb_tags_raw, mlb_quip_raw, train_df_raw = await asyncio.gather(
+    model_raw, mlb_tags_raw, mlb_quip_raw, aggs_df_raw = await asyncio.gather(
         s3_download('data', API_MODEL),
         s3_download('data', 'mlb_tags.pkl'),
         s3_download('data', 'mlb_equip.pkl'),
-        s3_download('data', 'train_df.parquet'),
+        s3_download('data', 'aggs_df.parquet'),
     )
     with tempfile.NamedTemporaryFile() as file:
         file.write(model_raw)
         model = CatBoostRegressor()
         model.load_model(file.name)
-    train_df: pd.DataFrame = pd.read_parquet(BytesIO(train_df_raw))
-    train_df = train_df.drop(columns=['price', 'photos_name', 'predicted_prices'])
+    aggs_df: pd.DataFrame = pd.read_parquet(BytesIO(aggs_df_raw))
     mlb_tags: MultiLabelBinarizer = joblib.load(BytesIO(mlb_tags_raw))
     mlb_quip: MultiLabelBinarizer = joblib.load(BytesIO(mlb_quip_raw))
-    return model, mlb_tags, mlb_quip, train_df
+    return model, mlb_tags, mlb_quip, aggs_df
 
 
 def mlb_encode(mlb: MultiLabelBinarizer, column: pd.Series, name: str) -> pd.DataFrame:
@@ -57,22 +56,15 @@ def flatten_specs(values: dict) -> dict:
     return flat
 
 
-def get_subset(data: pd.Series, train_df: pd.DataFrame) -> pd.DataFrame:
-    importants = ['mark', 'model', 'year', 'generation', 'trim']
-    cols = [c for c in importants if c in data and pd.notna(data[c])]
-    return train_df[(train_df[cols] == data[cols]).all(1)]
-
-
-def fill_data(data: pd.Series, subset: pd.DataFrame, cat_cols: list) -> pd.Series:
-    data = data[data.index.intersection(subset.columns)]
-    subset[cat_cols] = subset[cat_cols].fillna('').astype(str)
-    for col in subset.columns:
-        if col in data and pd.notna(data[col]):
-            continue
-        elif col not in cat_cols:
-            data[col] = subset[col].mean()
-        else:
-            data[col] = subset[col].mode().iloc[0]
+def fill_data(data: pd.Series, aggs_df: pd.DataFrame) -> pd.Series:
+    all_keys = ['mark', 'model', 'year', 'generation', 'trim']
+    keys = [key for key in all_keys if pd.notna(data[key])]
+    subset = aggs_df[aggs_df['group'] == str(keys)]
+    row = subset[(subset[keys] == data[keys]).all(1)].iloc[0]
+    for col in row.index:
+        if col == 'group': continue  # fmt: off
+        if col in data and pd.notna(data[col]): continue  # fmt: off
+        data[col] = row[col]
     return data
 
 
@@ -85,9 +77,5 @@ def prepredict(request: dict, state: AppState) -> pd.Series:
         data = data.join(mlb_encode(state.mlb_quip, data['equipment'], 'equip'))
     if data['tags'] is not None:
         data = data.join(mlb_encode(state.mlb_tags, data['tags'], 'tags'))
-    subset = get_subset(data, state.train_df)
-    assert state.model.feature_names_ is not None
-    cat_idx = state.model.get_cat_feature_indices()
-    cat_cols = [state.model.feature_names_[i] for i in cat_idx]
-    data = fill_data(data, subset, cat_cols)
+    data = fill_data(data, state.aggs_df)
     return data.reindex(state.model.feature_names_)

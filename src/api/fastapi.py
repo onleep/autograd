@@ -16,12 +16,12 @@ async def prediction(body: PredictReq, request: Request):
 
 
 async def fastapi():
-    model, mlb_quip, mlb_tags, train_df = await load_artifacts()
+    model, mlb_quip, mlb_tags, aggs_df = await load_artifacts()
     app.state.ctx = AppState(
         model=model,
         mlb_quip=mlb_quip,
         mlb_tags=mlb_tags,
-        train_df=train_df,
+        aggs_df=aggs_df,
     )
     config = uvicorn.Config(app, host='0.0.0.0', log_config=None)
     await uvicorn.Server(config).serve()
