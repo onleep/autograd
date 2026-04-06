@@ -2,6 +2,7 @@ import streamlit as st
 
 from frontend.data import MISSING
 from frontend.models import (
+    AttributesData,
     OfferData,
     SpecificationsBaseData,
     SpecificationsData,
@@ -32,6 +33,8 @@ def init_state() -> None:
         'generation': None,
         'trim': None,
         'mileage': 60000,
+        'region': None,
+        'owners': None,
         'power': None,
         'gear_type': None,
         'auto_class': None,
@@ -80,6 +83,17 @@ def current_specifications() -> SpecificationsData | None:
     if volume := read_volume_specifications():
         specifications['volume_and_mass'] = volume
     return specifications or None
+
+
+def current_attributes() -> AttributesData | None:
+    attributes: AttributesData = {}
+    region = read_text('region')
+    owners = read_int('owners')
+    if region is not None:
+        attributes['region'] = region
+    if owners is not None:
+        attributes['owners'] = owners
+    return attributes or None
 
 
 def read_text(key: str) -> str | None:

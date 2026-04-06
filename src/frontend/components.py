@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from functools import partial
 
 import altair as alt
@@ -10,9 +11,16 @@ from frontend.data import (
     text_options,
     year_options,
 )
-from frontend.models import OfferData, ReadyOffer, SimilarStats, SpecificationsData
+from frontend.models import (
+    AttributesData,
+    OfferData,
+    ReadyOffer,
+    SimilarStats,
+    SpecificationsData,
+)
 from frontend.pricing import find_similar_group, summarize_similars
 from frontend.utils import (
+    current_attributes,
     current_offer,
     current_specifications,
     format_money,
@@ -79,7 +87,7 @@ def render_overview(df: pd.DataFrame) -> None:
 
 def render_form(
     df: pd.DataFrame,
-) -> tuple[OfferData, SpecificationsData | None]:
+) -> tuple[OfferData, AttributesData | None, SpecificationsData | None]:
     mark = read_text('mark')
     model = read_text('model')
     year = st.session_state.get('year')
@@ -173,15 +181,29 @@ def render_form(
             )
         st.caption('Селекторы формируются исходя из выбранных параметров')
         with st.expander('🔧 Дополнительные характеристики', expanded=False):
-            st.caption('Эти поля необязательны и помогают точнее оценить цену')
-            render_optional_fields(specs_df, year is None)
-    return current_offer(), current_specifications()
+            st.caption('Эти поля необязательны, но помогают точнее оценить автомобиль')
+            render_optional_fields(df, specs_df, year is None)
+    return current_offer(), current_attributes(), current_specifications()
 
 
 def render_optional_fields(
+    attrs_df: pd.DataFrame,
     df: pd.DataFrame,
     disabled: bool,
 ) -> None:
+    st.markdown('**Параметры объявления**')
+    row = st.columns(2)
+    with row[0]:
+        render_optional_select(
+            'Регион',
+            'region',
+            text_options(attrs_df, 'region'),
+            disabled,
+        )
+    with row[1]:
+        render_optional_number(
+            'Количество владельцев', 'dispownerslacement', disabled, step=1
+        )
     st.markdown('**Базовые характеристики**')
     row = st.columns(3)
     with row[0]:
@@ -231,7 +253,7 @@ def render_optional_fields(
 def render_optional_select(
     label: str,
     key: str,
-    options: list[str],
+    options: Sequence[str | int],
     disabled: bool,
 ) -> None:
     st.selectbox(

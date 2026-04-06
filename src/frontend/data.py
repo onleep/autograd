@@ -6,6 +6,7 @@ import streamlit as st
 
 from clients.s3 import s3_download, s3close, s3init
 
+ATTR_COLUMNS = ['region', 'owners']
 SPEC_COLUMNS = {
     'base_power': 'power',
     'base_gear_type': 'gear_type',
@@ -20,7 +21,15 @@ SPEC_COLUMNS = {
     'volume_and_mass_full_weight': 'full_weight',
     'volume_and_mass_weight': 'weight',
 }
-TEXT_COLUMNS = ['mark', 'model', 'generation', 'trim', 'gear_type', 'auto_class']
+TEXT_COLUMNS = [
+    'mark',
+    'model',
+    'generation',
+    'trim',
+    'region',
+    'gear_type',
+    'auto_class',
+]
 MISSING = '__missing__'
 
 
@@ -39,7 +48,7 @@ def download_data() -> bytes:
 @st.cache_data(show_spinner=False)
 def load_data() -> pd.DataFrame:
     base_columns = ['mark', 'model', 'generation', 'trim', 'year', 'mileage', 'price']
-    columns = [*base_columns, *SPEC_COLUMNS]
+    columns = [*base_columns, *ATTR_COLUMNS, *SPEC_COLUMNS]
     data_raw = download_data()
     data = pd.read_parquet(BytesIO(data_raw), columns=columns)
     data = data.rename(columns=SPEC_COLUMNS).copy()

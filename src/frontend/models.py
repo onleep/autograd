@@ -63,7 +63,9 @@ class SpecificationsData(TypedDict, total=False):
     volume_and_mass: SpecificationsVolumeData
 
 
-class AttributesData(TypedDict):
+class AttributesData(TypedDict, total=False):
+    region: str
+    owners: int
     pub_year: int
     pub_month: int
 

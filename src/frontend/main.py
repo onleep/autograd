@@ -23,7 +23,7 @@ def main() -> None:
     render_header(data)
     render_overview(data)
     st.caption(f'API endpoint: `{API_ADDR}`')
-    offer, specifications = render_form(data)
+    offer, attributes, specifications = render_form(data)
     if st.button('Предсказать стоимость 💸', type='primary', width='stretch'):
         if not is_offer_ready(offer):
             st.warning('Сначала выберите марку, модель и год автомобиля')
@@ -31,7 +31,9 @@ def main() -> None:
             with st.spinner('Считаю стоимость и сравниваю с рынком...'):
                 try:
                     st.session_state['prediction'] = predict_price(
-                        offer, specifications
+                        offer,
+                        attributes,
+                        specifications,
                     )
                 except requests.RequestException as error:
                     st.error(f'Не получилось обратиться к API: {error}')

@@ -16,6 +16,7 @@ from frontend.models import (
 
 def predict_price(
     offer: ReadyOffer,
+    attributes: AttributesData | None = None,
     specifications: SpecificationsData | None = None,
 ) -> float:
     response = requests.post(
@@ -23,7 +24,7 @@ def predict_price(
         json={
             'data': {
                 'offer': offer,
-                'attributes': get_attrs(),
+                'attributes': get_attrs(attributes),
                 'specifications': specifications,
             }
         },
@@ -33,9 +34,16 @@ def predict_price(
     return float(response.json()['price'])
 
 
-def get_attrs() -> AttributesData:
+def get_attrs(attributes: AttributesData | None = None) -> AttributesData:
     now = datetime.now().astimezone()
-    return {'pub_year': now.year, 'pub_month': now.month}
+    payload: AttributesData = {'pub_year': now.year, 'pub_month': now.month}
+    if attributes is None:
+        return payload
+    if 'region' in attributes:
+        payload['region'] = attributes['region']
+    if 'owners' in attributes:
+        payload['owners'] = attributes['owners']
+    return payload
 
 
 def build_similar_tiers(offer: ReadyOffer) -> list[SimilarTier]:
