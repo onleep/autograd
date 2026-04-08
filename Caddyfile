@@ -9,3 +9,7 @@ graf.{$DOMAIN} {
 pma.{$DOMAIN} {
     reverse_proxy phpmyadmin:80
 }
+
+{$DOMAIN} {
+    reverse_proxy frontend:8501
+}
