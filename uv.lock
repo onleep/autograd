@@ -351,7 +351,6 @@ api = [
     { name = "fastapi", extra = ["standard"] },
     { name = "pyarrow" },
     { name = "scikit-learn" },
-    { name = "sentence-transformers" },
 ]
 frontend = [
     { name = "pandas" },
@@ -360,6 +359,11 @@ frontend = [
     { name = "streamlit" },
 ]
 ml = [
+    { name = "catboost" },
+    { name = "pyarrow" },
+    { name = "scikit-learn" },
+]
+ml-embeds = [
     { name = "catboost" },
     { name = "pyarrow" },
     { name = "scikit-learn" },
@@ -378,6 +382,7 @@ requires-dist = [
     { name = "aiocron", marker = "extra == 'parser'", specifier = ">=2.1" },
     { name = "aiohttp", extras = ["speedups"], marker = "extra == 'parser'", specifier = ">=3.13.1" },
     { name = "autograd", extras = ["ml"], marker = "extra == 'api'" },
+    { name = "autograd", extras = ["ml"], marker = "extra == 'ml-embeds'" },
     { name = "browserforge", marker = "extra == 'parser'", specifier = ">=1.2.3" },
     { name = "catboost", marker = "extra == 'ml'", specifier = ">=1.2.10" },
     { name = "cryptography", specifier = ">=46.0.3" },
@@ -389,11 +394,11 @@ requires-dist = [
     { name = "python-dotenv", specifier = ">=1.1.1" },
     { name = "requests", marker = "extra == 'frontend'", specifier = ">=2.33.1" },
     { name = "scikit-learn", marker = "extra == 'ml'", specifier = ">=1.8.0" },
-    { name = "sentence-transformers", marker = "extra == 'ml'", specifier = ">=5.3.0" },
+    { name = "sentence-transformers", marker = "extra == 'ml-embeds'", specifier = ">=5.3.0" },
     { name = "streamlit", marker = "extra == 'frontend'", specifier = ">=1.55.0" },
     { name = "tortoise-orm", extras = ["asyncmy"], specifier = "==0.25.4" },
 ]
-provides-extras = ["parser", "ml", "api", "frontend"]
+provides-extras = ["parser", "ml", "ml-embeds", "api", "frontend"]
 
 [[package]]
 name = "backports-zstd"
