@@ -15,6 +15,8 @@ COPY src/$APP_NAME src/app
 COPY src/clients src/clients
 COPY src/config.py src/config.py
 
+RUN sh -c 'if [ "$APP_NAME" = "frontend" ]; then mv src/app src/frontend; fi'
+
 CMD sh -c 'if [ "$APP_NAME" = "frontend" ]; then \
-    exec streamlit run src/frontend/main.py; else \
+    exec uv run streamlit run src/frontend/main.py; else \
     exec uv run -m app.main; fi'
