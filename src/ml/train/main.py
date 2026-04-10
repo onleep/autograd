@@ -42,7 +42,7 @@ def get_pools(data: pd.DataFrame, columns: list) -> tuple[Pool, Pool, Pool]:
     )
     cat_features = x_train.select_dtypes(include='object').columns.to_list()
     params = {'cat_features': cat_features}
-    if TRAIN_MODE == '2': params['text_features'] = ['description']  # fmt: off
+    if TRAIN_MODE == '1': params['text_features'] = ['description']  # fmt: off
     train_pool = Pool(x_train, label=y_train, **params)
     test_pool = Pool(x_test, label=y_test, **params)
     val_pool = Pool(x_val, label=y_val, **params)
