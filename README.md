@@ -62,7 +62,7 @@ Schedule:
 phpmyadmin:
   image: phpmyadmin:5.2.3
   ports:
-    - <desired_port>:80
+    - <target_port>:80
 ```
 
 ### 1. Prepare env
@@ -75,19 +75,13 @@ cp .env.dev .env
 
 After that, fill in the values in `.env`.
 
-### 2. Build containers
+### 2. Start containers
 
 ```bash
-docker compose build
+docker compose up -d --build
 ```
 
-### 3. Start services
-
-```bash
-docker compose up -d
-```
-
-### 4. Create the `main` bucket in MinIO once
+### 3. Create the `main` bucket in MinIO once
 
 This step only needs to be done on the first launch.
 
