@@ -202,7 +202,7 @@ def render_optional_fields(
         )
     with row[1]:
         render_optional_number(
-            'Количество владельцев', 'dispownerslacement', disabled, step=1
+            'Количество владельцев', 'owners', disabled, step=1
         )
     st.markdown('**Базовые характеристики**')
     row = st.columns(3)

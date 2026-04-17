@@ -53,18 +53,19 @@ def build_similar_tiers(offer: ReadyOffer) -> list[SimilarTier]:
     MIN_OFFERS = 10
     tiers: list[SimilarTier] = []
     default = ('mark', 'model', 'year')
-    if offer['trim']:
+    if offer['generation'] and offer['trim']:
         tiers.append(
-            (pick(*default, 'generation', 'trim'), MIN_OFFERS, 'этой же комплектации')
+            (
+                pick(*default, 'generation', 'trim'),
+                MIN_OFFERS,
+                'этого же поколения и комплектации',
+            )
         )
     if offer['generation']:
         tiers.append((pick(*default, 'generation'), MIN_OFFERS, 'этого же поколения'))
-    tiers.extend(
-        [
-            (pick(*default), MIN_OFFERS, 'этой же модели и года'),
-            (pick('mark', 'model'), MIN_OFFERS, 'этой же модели'),
-        ]
-    )
+    if offer['trim']:
+        tiers.append((pick(*default, 'trim'), MIN_OFFERS, 'этой же комплектации'))
+    tiers.append((pick(*default), MIN_OFFERS, 'этой же модели и года'))
     return tiers
 
 
@@ -72,8 +73,8 @@ def find_similar_group(
     df: pd.DataFrame,
     offer: ReadyOffer,
 ) -> tuple[pd.DataFrame, str]:
-    fallback = filter_data(df, mark=offer['mark'], model=offer['model'])
-    label = 'этой же модели'
+    fallback = pd.DataFrame()
+    label = 'этой же модели и года'
     for filters, min_rows, tier_label in build_similar_tiers(offer):
         similars = filter_data(df, **filters)
         if not similars.empty:

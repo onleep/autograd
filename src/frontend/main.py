@@ -22,7 +22,7 @@ def main() -> None:
     data = load_data()
     render_header(data)
     render_overview(data)
-    st.caption(f'API endpoint: `{API_ADDR}`')
+    # st.caption(f'API endpoint: `{API_ADDR}`')
     offer, attributes, specifications = render_form(data)
     if st.button('Предсказать стоимость 💸', type='primary', width='stretch'):
         if not is_offer_ready(offer):
