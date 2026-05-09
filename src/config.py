@@ -14,6 +14,7 @@ DB_ADDR = env['DB_ADDR'] or ''
 ## ml
 ML_MODE = env['ML_MODE'] or ''
 TRAIN_MODE = env['TRAIN_MODE'] or ''
+TRAIN_TARGET = env['TRAIN_TARGET'] or ''
 ## api
 API_ADDR  = env['API_ADDR'] or ''
 API_MODEL = env['API_MODEL'] or ''
