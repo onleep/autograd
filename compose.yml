@@ -12,13 +12,25 @@ services:
         condition: service_healthy
     volumes:
       - ./logs/parser:/app/logs
+  vlm:
+    image: vllm/vllm-openai:v0.20.2
+    depends_on:
+      - parser
+    command: >
+      Qwen/Qwen3-VL-4B-Instruct-FP8
+      --gpu-memory-utilization 0.85
+      --max-model-len 8192
+    ipc: host
+    gpus: all
+    volumes:
+      - ~/.cache/huggingface:/root/.cache/huggingface
   ml:
     build:
       context: .
       args:
         APP_NAME: ml
     depends_on:
-      - parser
+      - vlm
     volumes:
       - ./logs/ml:/app/logs
   api:
