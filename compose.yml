@@ -41,7 +41,8 @@ services:
     ports:
       - 8000:8000
     depends_on:
-      - ml
+      ml:
+        condition: service_completed_successfully
     volumes:
       - ./logs/api:/app/logs
   frontend:

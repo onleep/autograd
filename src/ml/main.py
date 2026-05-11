@@ -19,7 +19,7 @@ async def main() -> None:
         if ML_MODE in ('2', '3'):
             await train()
     else:
-        logging.error('Insufficient data')
+        raise ValueError('Insufficient data')
     await asyncio.gather(dbclose(), s3close())
 
 
