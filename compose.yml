@@ -17,20 +17,23 @@ services:
     depends_on:
       - parser
     command: >
-      Qwen/Qwen3-VL-4B-Instruct-FP8
-      --gpu-memory-utilization 0.85
-      --max-model-len 8192
+      Qwen/Qwen3-VL-4B-Instruct-FP8 --gpu-memory-utilization 0.85 --max-model-len 8192
     ipc: host
     gpus: all
     volumes:
       - ~/.cache/huggingface:/root/.cache/huggingface
+    healthcheck:
+      test: curl -f http://localhost:8000/v1/models
+      interval: 30s
+      retries: 60
   ml:
     build:
       context: .
       args:
         APP_NAME: ml
     depends_on:
-      - vlm
+      vlm:
+        condition: service_healthy
     volumes:
       - ./logs/ml:/app/logs
   api:
