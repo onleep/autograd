@@ -17,6 +17,8 @@ from sklearn.model_selection import train_test_split
 from clients.s3 import s3_download, s3_upload
 from config import TRAIN_MODE, TRAIN_TARGET
 
+from ..preprocess.main import upload_df
+
 
 async def load_data() -> pd.DataFrame:
     data = await s3_download('data', 'train_df.parquet')
@@ -78,13 +80,19 @@ async def train() -> None:
     logging.info('Load data')
     data = await load_data()
     columns = ['price', 'photos_name', 'predicted_prices', 'autoru_id', 'description']
-    if TRAIN_MODE in ('1', '2'):
+    if TRAIN_MODE != '0':
         columns.remove('description')
-        if TRAIN_MODE == '2':
+        if TRAIN_MODE in ('2', '3'):
             from .embedding import embedding
 
             logging.info('Embedding')
             data = embedding(data)
+        if TRAIN_MODE in ('3', '4'):
+            from .photo_features import photo_features
+
+            logging.info('Photo features')
+            data = await photo_features(data)
+    await upload_df(data, 'final_df')
     train_pool, test_pool, val_pool = get_pools(data, columns)
     model = CatBoostRegressor(random_seed=42, iterations=5000)
     logging.info('Fit model')
