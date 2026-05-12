@@ -20,6 +20,6 @@ def clean_outliers(data: pd.DataFrame) -> pd.DataFrame:
     q_high = data['price'].quantile(0.999)
     data = data[(data['price'] >= q_low) & (data['price'] <= q_high)]
     subset = data.columns.difference(
-        ['price', 'description', 'photos_name', 'predicted_prices']
+        ['price', 'photos_name', 'predicted_prices', 'autoru_id', 'description']
     )
     return data.drop_duplicates(subset=subset)

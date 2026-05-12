@@ -2,7 +2,7 @@ import pandas as pd
 
 
 def build_aggregates(data: pd.DataFrame) -> pd.DataFrame:
-    columns = ['price', 'photos_name', 'predicted_prices', 'description']
+    columns = ['price', 'photos_name', 'predicted_prices', 'autoru_id', 'description']
     data = data.drop(columns=columns)
     cat_cols = data.select_dtypes(include='object').columns.to_list()
     levels = [

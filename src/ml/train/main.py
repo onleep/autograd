@@ -77,7 +77,7 @@ async def upload_model(model: CatBoostRegressor, metric: float) -> None:
 async def train() -> None:
     logging.info('Load data')
     data = await load_data()
-    columns = ['price', 'photos_name', 'predicted_prices', 'description']
+    columns = ['price', 'photos_name', 'predicted_prices', 'autoru_id', 'description']
     if TRAIN_MODE in ('1', '2'):
         columns.remove('description')
         if TRAIN_MODE == '2':

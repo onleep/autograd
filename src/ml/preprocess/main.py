@@ -28,7 +28,6 @@ async def preprocess():
     data = data.merge(await prepare_attrs(), on='autoru_id', how='inner')
     logging.info('Start prepare_photos')
     data = data.merge(await prepare_photos(), on='autoru_id', how='inner')
-    data.drop(columns=['autoru_id'], inplace=True)
     data = clean_outliers(data)
     obj_cols = data.select_dtypes(include='object').columns.difference(
         ['predicted_prices', 'photos_name']
