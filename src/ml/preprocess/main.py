@@ -4,6 +4,7 @@ import tempfile
 import pandas as pd
 
 from clients.s3 import s3_upload
+from config import FEATURES
 
 from .aggs import build_aggregates
 from .attrs import prepare_attrs
@@ -33,6 +34,7 @@ async def preprocess():
         ['predicted_prices', 'photos_name']
     )
     data[obj_cols] = data[obj_cols].fillna('').astype(str)
+    if FEATURES: data = data[FEATURES]  # fmt: off
     await upload_df(data, 'train_df')
     logging.info('Aggregate train_df')
     await upload_df(build_aggregates(data), 'aggs_df')

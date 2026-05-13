@@ -17,8 +17,9 @@ VLM_URL = env['VLM_URL'] or ''
 VLM_MODEL = env['VLM_MODEL'] or ''
 TRAIN_MODE = env['TRAIN_MODE'] or ''
 TRAIN_TARGET = env['TRAIN_TARGET'] or ''
+FEATURES = (env.get('FEATURES') or '').split()
 ## api
-API_ADDR  = env['API_ADDR'] or ''
+API_ADDR = env['API_ADDR'] or ''
 API_MODEL = env['API_MODEL'] or ''
 ## parser
 PROXIES = [k for i in range(100) if (k := env.get(f'PROXY{i}'))]
