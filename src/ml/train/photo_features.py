@@ -73,7 +73,6 @@ async def photo_features(data: pd.DataFrame, batch_size: int = 16):
             ]
             results = await asyncio.gather(*tasks)
             for index, features in results:
-                logging.info(f'features: {features}')
                 if features is None: continue  # fmt: off
                 data.loc[index, list(QUESTIONS.keys())] = list(features.values())
             if (start + len(batch)) % 10000 < batch_size:
