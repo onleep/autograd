@@ -10,20 +10,16 @@ from config import VLM_MODEL, VLM_URL
 from .photo_config import PROMPT, QUESTIONS, RESPONSE_FORMAT
 
 
-def build_payload(images: list[str]) -> dict[str, Any]:
+def build_content(images: list[str]) -> list[dict[str, Any]]:
     content = []
     for image in images:
         photo = f'data:image/jpeg;base64,{image}'
         content.append({'type': 'image_url', 'image_url': {'url': photo}})
-    message = [
-        {
-            'role': 'user',
-            'content': [
-                {'type': 'text', 'text': PROMPT},
-                *content,
-            ],
-        }
-    ]
+    return [{'type': 'text', 'text': PROMPT}, *content]
+
+
+def build_payload(content: list[dict[str, Any]]) -> dict[str, Any]:
+    message = [{'role': 'user', 'content': content}]
     return {
         'model': VLM_MODEL,
         'messages': message,
@@ -48,7 +44,8 @@ async def request_vlm(
 
 async def photo_features(data: pd.Series) -> pd.Series:
     async with ClientSession(timeout=ClientTimeout(total=60)) as session:
-        payload = build_payload(data['photos'])
+        content = build_content(data['photos'])
+        payload = build_payload(content)
         features = await request_vlm(session, payload)
     features = pd.Series(features).reindex(list(QUESTIONS.keys()))
     data.loc[features.index] = features
