@@ -7,6 +7,7 @@ from config import API_ADDR
 from frontend.data import filter_data
 from frontend.models import (
     AttributesData,
+    PhotosData,
     ReadyOffer,
     SimilarStats,
     SimilarTier,
@@ -16,14 +17,17 @@ from frontend.models import (
 
 def predict_price(
     offer: ReadyOffer,
+    photos: PhotosData | None = None,
     attributes: AttributesData | None = None,
     specifications: SpecificationsData | None = None,
 ) -> float:
     data = {'data': {'offer': offer}}
+    if photos:
+        data['data']['photos'] = photos  # type: ignore
     if attrs := get_attrs(attributes):
-        data['data']['attributes'] = attrs # type: ignore
+        data['data']['attributes'] = attrs  # type: ignore
     if specifications:
-        data['data']['specifications'] = specifications # type: ignore
+        data['data']['specifications'] = specifications  # type: ignore
     response = requests.post(API_ADDR, json=data, timeout=10)
     response.raise_for_status()
     return float(response.json()['price'])

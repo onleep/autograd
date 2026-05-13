@@ -1,7 +1,6 @@
 import requests
 import streamlit as st
 
-from config import API_ADDR
 from frontend.components import (
     render_form,
     render_header,
@@ -23,7 +22,7 @@ def main() -> None:
     render_header(data)
     render_overview(data)
     # st.caption(f'API endpoint: `{API_ADDR}`')
-    offer, attributes, specifications = render_form(data)
+    offer, attributes, photos, specifications = render_form(data)
     if st.button('Предсказать стоимость 💸', type='primary', width='stretch'):
         if not is_offer_ready(offer):
             st.warning('Сначала выберите марку, модель и год автомобиля')
@@ -32,6 +31,7 @@ def main() -> None:
                 try:
                     st.session_state['prediction'] = predict_price(
                         offer,
+                        photos,
                         attributes,
                         specifications,
                     )

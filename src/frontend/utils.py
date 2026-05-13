@@ -4,11 +4,22 @@ from frontend.data import MISSING
 from frontend.models import (
     AttributesData,
     OfferData,
+    PhotosData,
     SpecificationsBaseData,
     SpecificationsData,
     SpecificationsEngineData,
     SpecificationsSizesData,
     SpecificationsVolumeData,
+)
+
+PHOTO_KEYS = (
+    'body_condition',
+    'photo_quality',
+    'car_cleanliness',
+    'glass_condition',
+    'damage_severity',
+    'paint_condition',
+    'wheel_condition',
 )
 
 
@@ -35,6 +46,7 @@ def init_state() -> None:
         'mileage': 60000,
         'region': None,
         'owners': None,
+        'rust_presence': None,
         'power': None,
         'gear_type': None,
         'auto_class': None,
@@ -49,6 +61,7 @@ def init_state() -> None:
         'weight': None,
         'prediction': None,
     }
+    defaults.update(dict.fromkeys(PHOTO_KEYS, None))
     for key, value in defaults.items():
         st.session_state.setdefault(key, value)
 
@@ -94,6 +107,17 @@ def current_attributes() -> AttributesData | None:
     if owners is not None:
         attributes['owners'] = owners
     return attributes or None
+
+
+def current_photos() -> PhotosData | None:
+    photos: PhotosData = {}
+    for key in PHOTO_KEYS:
+        if value := read_int(key):
+            photos[key] = value
+    rust_presence = st.session_state.get('rust_presence')
+    if isinstance(rust_presence, bool):
+        photos['rust_presence'] = rust_presence
+    return photos or None
 
 
 def read_text(key: str) -> str | None:

@@ -2,6 +2,7 @@ from typing import TypedDict, TypeGuard
 
 SimilarFilters = dict[str, str | int | None]
 SimilarTier = tuple[SimilarFilters, int, str]
+PhotosData = dict[str, int | bool]
 
 
 class OfferData(TypedDict):

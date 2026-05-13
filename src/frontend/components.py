@@ -14,6 +14,7 @@ from frontend.data import (
 from frontend.models import (
     AttributesData,
     OfferData,
+    PhotosData,
     ReadyOffer,
     SimilarStats,
     SpecificationsData,
@@ -22,6 +23,7 @@ from frontend.pricing import find_similar_group, summarize_similars
 from frontend.utils import (
     current_attributes,
     current_offer,
+    current_photos,
     current_specifications,
     format_money,
     format_number,
@@ -29,6 +31,17 @@ from frontend.utils import (
     read_text,
     reset_fields,
 )
+
+VISUAL_OPTIONS = list(range(1, 11))
+VISUAL_FIELDS = [
+    ('Состояние кузова', 'body_condition'),
+    ('Качество фотографии ', 'photo_quality'),
+    ('Чистота автомобиля', 'car_cleanliness'),
+    ('Состояние стекол', 'glass_condition'),
+    ('Серьезность повреждений', 'damage_severity'),
+    ('Состояние краски', 'paint_condition'),
+    ('Состояние колес', 'wheel_condition'),
+]
 
 
 def render_styles() -> None:
@@ -87,7 +100,12 @@ def render_overview(df: pd.DataFrame) -> None:
 
 def render_form(
     df: pd.DataFrame,
-) -> tuple[OfferData, AttributesData | None, SpecificationsData | None]:
+) -> tuple[
+    OfferData,
+    AttributesData | None,
+    PhotosData | None,
+    SpecificationsData | None,
+]:
     mark = read_text('mark')
     model = read_text('model')
     year = st.session_state.get('year')
@@ -183,7 +201,12 @@ def render_form(
         with st.expander('🔧 Дополнительные характеристики', expanded=False):
             st.caption('Эти поля необязательны, но помогают точнее оценить автомобиль')
             render_optional_fields(df, specs_df, year is None)
-    return current_offer(), current_attributes(), current_specifications()
+    return (
+        current_offer(),
+        current_attributes(),
+        current_photos(),
+        current_specifications(),
+    )
 
 
 def render_optional_fields(
@@ -201,9 +224,8 @@ def render_optional_fields(
             disabled,
         )
     with row[1]:
-        render_optional_number(
-            'Количество владельцев', 'owners', disabled, step=1
-        )
+        render_optional_number('Количество владельцев', 'owners', disabled, step=1)
+    render_visual_fields(disabled)
     st.markdown('**Базовые характеристики**')
     row = st.columns(3)
     with row[0]:
@@ -248,6 +270,26 @@ def render_optional_fields(
         render_optional_number('Полная масса, кг', 'full_weight', disabled, step=50)
     with row[1]:
         render_optional_number('Снаряжённая масса, кг', 'weight', disabled, step=50)
+
+
+def render_visual_fields(disabled: bool) -> None:
+    st.markdown('**Оценка визуальных признаков**')
+    rows = [st.columns(4), st.columns(4)]
+    for row, fields in zip(rows, (VISUAL_FIELDS[:4], VISUAL_FIELDS[4:]), strict=True):
+        for column, (label, key) in zip(row, fields, strict=False):
+            with column:
+                render_optional_select(label, key, VISUAL_OPTIONS, disabled)
+    with rows[1][3]:
+        st.selectbox(
+            'Есть ржавчина',
+            [False, True],
+            key='rust_presence',
+            index=None,
+            placeholder='Можно оставить пустым',
+            disabled=disabled,
+            format_func=lambda value: 'Да' if value else 'Нет',
+            on_change=reset_fields,
+        )
 
 
 def render_optional_select(
