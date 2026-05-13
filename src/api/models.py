@@ -1,8 +1,9 @@
-from typing import Any
+import base64
+from typing import Annotated, Any
 
 import pandas as pd
 from catboost import CatBoostRegressor
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sklearn.preprocessing import MultiLabelBinarizer
 
 
@@ -23,6 +24,29 @@ class Offer(BaseModel):
     mileage: int
     trim: str | None = None
     generation: str | None = None
+
+
+class Photos(BaseModel):
+    photos: Annotated[list[str], Field(max_length=5)] | None = None
+    body_condition: int | None = None
+    photo_quality: int | None = None
+    car_cleanliness: int | None = None
+    rust_presence: bool | None = None
+    glass_condition: int | None = None
+    damage_severity: int | None = None
+    paint_condition: int | None = None
+    wheel_condition: int | None = None
+
+    @field_validator('photos')
+    @classmethod
+    def validate_photos(cls, value: list[str] | None) -> list[str] | None:
+        if value is None: return value  # fmt: off
+        for photo in value:
+            try:
+                base64.b64decode(photo, validate=True)
+            except Exception as e:
+                raise ValueError('Photo must be valid base64') from e
+        return value
 
 
 class Attributes(BaseModel):
@@ -76,8 +100,9 @@ class Specifications(BaseModel):
 
 class PredictData(BaseModel):
     offer: Offer
-    attributes: Attributes | None = None
-    specifications: Specifications | None = None
+    photos: Photos = Field(default_factory=Photos)
+    attributes: Attributes = Field(default_factory=Attributes)
+    specifications: Specifications = Field(default_factory=Specifications)
 
 
 class PredictReq(BaseModel):

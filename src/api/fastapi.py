@@ -11,7 +11,7 @@ app = FastAPI()
 @app.post('/predict', response_model=PredictResp)
 async def prediction(body: PredictReq, request: Request):
     state: AppState = request.app.state.ctx
-    data = prepredict(body.data.model_dump(), state)
+    data = await prepredict(body.data.model_dump(), state)
     return {'price': np.expm1(state.model.predict(data)).item()}
 
 

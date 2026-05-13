@@ -11,7 +11,9 @@ from sklearn.preprocessing import MultiLabelBinarizer
 from clients.s3 import s3_download
 from config import API_MODEL
 
+from .embedding import embedding
 from .models import AppState
+from .photo_features import photo_features
 
 
 async def load_artifacts():
@@ -68,14 +70,19 @@ def fill_data(data: pd.Series, aggs_df: pd.DataFrame) -> pd.Series:
     return data
 
 
-def prepredict(request: dict, state: AppState) -> pd.Series:
+async def prepredict(request: dict, state: AppState) -> pd.Series:
     data_dict = request['offer']
-    data_dict.update(request['attributes'] or {})
-    data_dict.update(flatten_specs(request['specifications'] or {}))
+    data_dict.update(request['photos'])
+    data_dict.update(request['attributes'])
+    data_dict.update(flatten_specs(request['specifications']))
     data = pd.Series(data_dict)
     if data['equipment'] is not None:
         data = data.join(mlb_encode(state.mlb_quip, data['equipment'], 'equip'))
     if data['tags'] is not None:
         data = data.join(mlb_encode(state.mlb_tags, data['tags'], 'tags'))
+    if data['photos'] is not None:
+        data = await photo_features(data)
+    if data['description'] is not None:
+        data = embedding(data)
     data = fill_data(data, state.aggs_df)
     return data.reindex(state.model.feature_names_)
