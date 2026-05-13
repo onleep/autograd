@@ -14,7 +14,7 @@ The project automates the entire pipeline: offer collection, offer data storage,
 | `ml`           | Prepares the training dataset, aggregates, and trains the model                 | `train_df.parquet`, `aggs_df.parquet`, `mlb_*.pkl`, `model_*.cbm` in `MinIO`         |
 | `api`          | Loads the model and artifacts from `MinIO`, creates the prediction endpoint     | `POST /predict`                                                                      |
 | `frontend`     | Streamlit application for entering car parameters and comparing with the market | UI for price estimation                                                              |
-| Infrastructure | `MySQL`, `MinIO`, `Grafana`, `phpMyAdmin`, `Caddy`                              | Storage, administration and reverse proxy                                            |
+| Infrastructure | `MySQL`, `MinIO`, `Grafana`, `phpMyAdmin`, `vLLM`, `Caddy`                              | Storage, administration and reverse proxy                                            |
 
 Data flow: `parser -> MySQL / MinIO -> ml -> MinIO -> api -> frontend`.
 
