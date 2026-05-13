@@ -19,17 +19,12 @@ def predict_price(
     attributes: AttributesData | None = None,
     specifications: SpecificationsData | None = None,
 ) -> float:
-    response = requests.post(
-        API_ADDR,
-        json={
-            'data': {
-                'offer': offer,
-                'attributes': get_attrs(attributes),
-                'specifications': specifications,
-            }
-        },
-        timeout=10,
-    )
+    data = {'data': {'offer': offer}}
+    if attrs := get_attrs(attributes):
+        data['data']['attributes'] = attrs # type: ignore
+    if specifications:
+        data['data']['specifications'] = specifications # type: ignore
+    response = requests.post(API_ADDR, json=data, timeout=10)
     response.raise_for_status()
     return float(response.json()['price'])
 
